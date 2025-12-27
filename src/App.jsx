@@ -26,7 +26,10 @@ export default function MangaBlogApp() {
   );
 
   return (
-    <div style={{ background: theme.bg, minHeight: "100vh" }}>
+    <div
+      className={darkMode ? "app dark" : "app"}
+      style={{ minHeight: "100vh" }}
+    >
       <Router>
         <Routes>
           <Route
