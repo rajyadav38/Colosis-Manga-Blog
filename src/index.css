@@ -94,13 +94,12 @@ code {
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
 }
 .app.dark h1 {
-  font-size: clamp(2rem, 4vw, 3rem);
-  font-weight: 700;
   background: linear-gradient(135deg, #ffffff, #d9dcff);
+  background-clip: text;
   -webkit-background-clip: text;
+  color: transparent;
   -webkit-text-fill-color: transparent;
 }
-
 .container,
 .card,
 .main-card {
