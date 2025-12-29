@@ -7,7 +7,7 @@ import { lightTheme, darkTheme } from "./theme/themes";
 
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./routes/ProtectedRoute";
-
+import MobileNav from "./components/MobileNav";
 import Home from "./pages/Home";
 import Create from "./pages/Create";
 import Scrolls from "./pages/Scrolls";
@@ -71,6 +71,7 @@ export default function MangaBlogApp() {
             }
           />
         </Routes>
+        <MobileNav />
       </Router>
     </div>
   );

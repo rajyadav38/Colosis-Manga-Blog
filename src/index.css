@@ -2,6 +2,14 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+* {
+  box-sizing: border-box;
+}
+
+body,
+html {
+  overflow-x: hidden;
+}
 
 /* 🌞 Light Mode Base */
 .app {
@@ -109,6 +117,37 @@ code {
   margin-top: 20px;
 }
 
+/* Fix navbar height */
+.navbar {
+  height: 64px; /* 👈 choose 60–68px */
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* 🔰 Navbar Logo */
+.navbar-logo {
+  height: 80px; /* 🔥 was ~38px */
+  width: auto;
+  display: block;
+}
+.navbar-brand {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+/* Optional subtle hover effect */
+.navbar-logo:hover {
+  filter: drop-shadow(0 0 6px rgba(255, 77, 109, 0.6));
+}
+.app.dark .navbar-logo {
+  filter: drop-shadow(0 0 8px rgba(255, 77, 109, 0.6));
+}
+
+.app:not(.dark) .navbar-logo {
+  filter: drop-shadow(0 0 4px rgba(255, 77, 109, 0.25));
+}
+
 .glow {
   box-shadow: 0 0 8px rgba(255, 77, 109, 0.6), 0 0 16px rgba(255, 77, 109, 0.4),
     0 0 24px rgba(255, 77, 109, 0.2);
@@ -123,3 +162,176 @@ code {
 
 @import url("https://fonts.googleapis.com/css2?family=Zen+Tokyo+Zoo&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Kaushan+Script&display=swap");
+
+@media (max-width: 768px) {
+  /* Navbar */
+  .navbar {
+    height: auto;
+    padding: 8px 12px;
+  }
+
+  .navbar-logo {
+    height: 36px;
+  }
+
+  /* Search bar */
+  .navbar input[type="text"] {
+    width: 100% !important;
+    margin-top: 8px;
+  }
+
+  /* Page containers */
+  .container,
+  .main-container,
+  .create-container {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  /* Profile card */
+  .profile-card {
+    width: 100%;
+  }
+}
+
+/* 📱 Mobile Bottom Navbar */
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: linear-gradient(180deg, #141826, #0d0f18);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .mobile-nav-item {
+    color: #9aa0c0;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .mobile-nav-item svg {
+    font-size: 20px;
+    margin-bottom: 2px;
+  }
+
+  .mobile-nav-item.active {
+    color: #ff4d6d;
+  }
+
+  /* Hide top navbar on mobile */
+  .navbar {
+    display: none;
+  }
+
+  /* Prevent content from hiding behind bottom nav */
+  .app {
+    padding-bottom: 72px;
+  }
+}
+/* 📱 Mobile Bottom Navbar */
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: linear-gradient(180deg, #141826, #0d0f18);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 999;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .mobile-nav-item {
+    color: #9aa0c0;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+  }
+
+  .mobile-nav-item svg {
+    font-size: 20px;
+    margin-bottom: 2px;
+  }
+
+  .mobile-nav-item.active {
+    color: #ff4d6d;
+  }
+
+  /* Hide top navbar on mobile */
+  .navbar {
+    display: none;
+  }
+
+  /* Prevent content from hiding behind bottom nav */
+  .app {
+    padding-bottom: 72px;
+  }
+}
+
+/* 📱 Mobile Top Navbar Simplification */
+@media (max-width: 768px) {
+  /* Hide desktop links */
+  .desktop-nav-links {
+    display: none !important;
+  }
+
+  /* Turn navbar into grid */
+  .mobile-grid-nav {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "logo . actions"
+      "search search search";
+    row-gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .nav-logo {
+    grid-area: logo;
+  }
+
+  .nav-actions {
+    grid-area: actions;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .nav-search {
+    grid-area: search;
+    width: 100%;
+  }
+
+  .navbar-logo {
+    height: 60px;
+  }
+
+  .navbar-search {
+    border-radius: 20px;
+    font-size: 13px;
+  }
+}
