@@ -22,7 +22,7 @@ export default function MangaBlogApp() {
   const theme = darkMode ? darkTheme : lightTheme;
 
   const [user, setUser] = useState(
-    JSON.parse(localStorage.getItem("user")) || null
+    JSON.parse(localStorage.getItem("user")) || null,
   );
 
   return (

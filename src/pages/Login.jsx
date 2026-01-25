@@ -9,7 +9,7 @@ export default function Login({ theme, setUser }) {
     const users = JSON.parse(localStorage.getItem("users")) || [];
 
     const found = users.find(
-      (u) => u.username === username && u.password === password
+      (u) => u.username === username && u.password === password,
     );
 
     if (!found) {
@@ -24,7 +24,7 @@ export default function Login({ theme, setUser }) {
 
   return (
     <div
-      className="container py-5"
+      className="container py-5 auth-page"
       style={{ color: theme.text, maxWidth: 420 }}
     >
       <h2 className="fw-bold mb-4 text-center">🔐 Login</h2>

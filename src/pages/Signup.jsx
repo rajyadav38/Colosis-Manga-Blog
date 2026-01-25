@@ -27,7 +27,7 @@ export default function Signup({ theme }) {
 
   return (
     <div
-      className="container py-5"
+      className="container py-5 auth-page"
       style={{ color: theme.text, maxWidth: 420 }}
     >
       <h2 className="fw-bold mb-4 text-center">📝 Sign Up</h2>
