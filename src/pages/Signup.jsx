@@ -2,27 +2,38 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function Signup({ theme }) {
+  // 🔴 STATE DEFINITIONS (THIS FIXES YOUR ERROR)
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const signup = () => {
-    if (!email.endsWith("@gmail.com")) {
-      alert("❌ Only Gmail IDs allowed");
+  const signup = async () => {
+    if (!username || !email || !password) {
+      alert("❌ Please fill all fields");
       return;
     }
 
-    const users = JSON.parse(localStorage.getItem("users")) || [];
+    try {
+      const res = await fetch("http://localhost:5000/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, email, password }),
+      });
 
-    if (users.find((u) => u.username === username)) {
-      alert("❌ Username already exists");
-      return;
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Signup failed");
+        return;
+      }
+
+      alert("✅ Signup successful! Please login");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Server error");
     }
-
-    users.push({ username, email, password });
-    localStorage.setItem("users", JSON.stringify(users));
-
-    alert("✅ Account created! Please login.");
   };
 
   return (
