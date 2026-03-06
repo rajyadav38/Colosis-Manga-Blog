@@ -1,13 +1,24 @@
 require("dotenv").config();
+const http = require("http");
 const app = require("./app");
+const { Server } = require("socket.io");
 
-// MongoDB
 const connectMongoDB = require("./config/mongo");
-const PORT = process.env.PORT || 5000;
 
-// Connect MongoDB FIRST
 connectMongoDB();
 
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 5000;
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
+require("./socket/socket")(io);
+
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

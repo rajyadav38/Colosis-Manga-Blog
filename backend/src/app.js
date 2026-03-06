@@ -3,6 +3,9 @@ const cors = require("cors");
 const app = express();
 
 const authRoutes = require("./routes/auth.routes");
+const userRoutes = require("./routes/user.routes");
+const conversationRoutes = require("./routes/conversation.routes");
+const messageRoutes = require("./routes/message.routes");
 /* 🔴 BODY PARSER — THIS FIXES YOUR ERROR */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -12,6 +15,9 @@ app.post("/test", (req, res) => {
 app.use(cors());
 app.use(express.json());
 /* Routes */
+app.use("/api/chat", messageRoutes);
+app.use("/api/chat", conversationRoutes);
+app.use("/api", userRoutes);
 app.use("/api/auth", authRoutes);
 app.get("/", (req, res) => {
   res.send("Colosis Backend is running 🚀");
