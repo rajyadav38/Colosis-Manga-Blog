@@ -10,10 +10,10 @@ export default function Chat({ theme }) {
   const [input, setInput] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user"));
-  const userId = user?.id;
+  const userId = Number(user?.id);
 
   // -------------------------------
-  // Load users from backend
+  // Load users
   // -------------------------------
 
   useEffect(() => {
@@ -49,14 +49,17 @@ export default function Chat({ theme }) {
     socketRef.current.emit("join", userId);
 
     socketRef.current.on("receiveMessage", (message) => {
-      const sender = message.senderId;
+      const senderId = Number(message.senderId);
+      const receiverId = Number(message.receiverId);
+
+      const otherUserId = senderId === userId ? receiverId : senderId;
 
       setMessages((prev) => ({
         ...prev,
-        [sender]: [
-          ...(prev[sender] || []),
+        [otherUserId]: [
+          ...(prev[otherUserId] || []),
           {
-            sender: sender === userId ? "You" : activeUser?.username,
+            senderId: senderId,
             text: message.text,
           },
         ],
@@ -66,7 +69,7 @@ export default function Chat({ theme }) {
     return () => {
       socketRef.current.disconnect();
     };
-  }, [userId, activeUser]);
+  }, [userId]);
 
   // -------------------------------
   // Auto scroll
@@ -74,7 +77,6 @@ export default function Chat({ theme }) {
 
   useEffect(() => {
     const box = document.getElementById("chat-box");
-
     if (box) box.scrollTop = box.scrollHeight;
   }, [messages, activeUser]);
 
@@ -97,7 +99,7 @@ export default function Chat({ theme }) {
       ...prev,
       [activeUser.id]: [
         ...(prev[activeUser.id] || []),
-        { sender: "You", text: input },
+        { senderId: userId, text: input },
       ],
     }));
 
@@ -117,7 +119,7 @@ export default function Chat({ theme }) {
       const data = await res.json();
 
       const formatted = data.map((m) => ({
-        sender: m.senderId === userId ? "You" : activeUser.username,
+        senderId: Number(m.senderId),
         text: m.text,
       }));
 
@@ -202,15 +204,15 @@ export default function Chat({ theme }) {
                 <div
                   key={i}
                   style={{
-                    textAlign: msg.sender === "You" ? "right" : "left",
+                    textAlign: msg.senderId === userId ? "right" : "left",
                   }}
                 >
                   <div
                     className="d-inline-block p-2 rounded mb-2"
                     style={{
                       background:
-                        msg.sender === "You" ? theme.accent : theme.bg,
-                      color: msg.sender === "You" ? "white" : theme.text,
+                        msg.senderId === userId ? theme.accent : theme.bg,
+                      color: msg.senderId === userId ? "white" : theme.text,
                       maxWidth: "70%",
                     }}
                   >
