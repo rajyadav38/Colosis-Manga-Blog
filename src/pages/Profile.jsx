@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { animateCards } from "../utils/animations";
 
 export default function Profile({ theme }) {
   const [avatar, setAvatar] = useState(null);
   const posts = [1, 2, 3, 4, 5, 6];
+
+  const user = JSON.parse(localStorage.getItem("user"));
+  const username = user?.username || "User";
+
+  const navigate = useNavigate();
 
   useEffect(() => animateCards(), []);
 
@@ -18,8 +24,8 @@ export default function Profile({ theme }) {
         />
 
         <div className="ms-4">
-          <h3 className="fw-bold">AnimeUser</h3>
-          <p className="text-muted">@mangaka</p>
+          <h3 className="fw-bold">{username}</h3>
+          <p className="text-muted">@{username}</p>
 
           <div className="d-flex gap-4">
             <div>
@@ -35,15 +41,18 @@ export default function Profile({ theme }) {
         </div>
       </div>
 
-      <label className="fw-semibold">Change Avatar</label>
-      <input
-        type="file"
-        className="form-control mb-4"
-        accept="image/*"
-        onChange={(e) => setAvatar(URL.createObjectURL(e.target.files[0]))}
-      />
+      {/* Edit Profile Button */}
+
+      <button
+        className="btn w-100 mb-4"
+        style={{ background: "#444", color: "white" }}
+        onClick={() => navigate("/edit-profile")}
+      >
+        Edit Profile
+      </button>
 
       <h4 className="fw-bold mb-3">Your Manga Posts</h4>
+
       <div className="row g-2 anime-card glow">
         {posts.map((p) => (
           <div className="col-4" key={p}>

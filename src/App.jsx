@@ -15,7 +15,7 @@ import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-
+import EditProfile from "./pages/EditProfile";
 export default function MangaBlogApp() {
   const [darkMode, setDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,6 +64,10 @@ export default function MangaBlogApp() {
                     <Route
                       path="/profile"
                       element={<Profile theme={theme} />}
+                    />
+                    <Route
+                      path="/edit-profile"
+                      element={<EditProfile theme={theme} />}
                     />
                   </Routes>
                 </>
