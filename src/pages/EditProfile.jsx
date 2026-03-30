@@ -1,6 +1,9 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function EditProfile({ theme }) {
+  const navigate = useNavigate();
+
   const user = JSON.parse(localStorage.getItem("user"));
 
   const [username, setUsername] = useState(user?.username || "");
@@ -10,30 +13,41 @@ export default function EditProfile({ theme }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const res = await fetch("http://localhost:5000/api/users/update-profile", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id: user.id,
-        username,
-        bio,
-      }),
-    });
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/users/update-profile",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: user.id,
+            username,
+            bio,
+          }),
+        },
+      );
 
-    const data = await res.json();
+      const data = await res.json();
 
-    alert(data.message);
+      alert(data.message);
 
-    // update localStorage username
-    localStorage.setItem(
-      "user",
-      JSON.stringify({
-        ...user,
-        username,
-      }),
-    );
+      // update localStorage username
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          ...user,
+          username,
+        }),
+      );
+
+      // redirect back to profile page
+      navigate("/profile");
+    } catch (error) {
+      console.log("Update error:", error);
+      alert("Something went wrong");
+    }
   };
 
   return (
@@ -48,16 +62,12 @@ export default function EditProfile({ theme }) {
         style={{ background: theme.card }}
       >
         <form onSubmit={handleSubmit}>
-          {/* Username */}
-
           <label className="fw-semibold">Username</label>
           <input
             className="form-control mb-3"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
           />
-
-          {/* Bio */}
 
           <label className="fw-semibold">Bio</label>
           <textarea
@@ -68,8 +78,6 @@ export default function EditProfile({ theme }) {
             onChange={(e) => setBio(e.target.value)}
           />
 
-          {/* Avatar Upload */}
-
           <label className="fw-semibold">Profile Picture</label>
           <input
             type="file"
@@ -77,8 +85,6 @@ export default function EditProfile({ theme }) {
             accept="image/*"
             onChange={(e) => setAvatar(e.target.files[0])}
           />
-
-          {/* Save Button */}
 
           <button
             className="btn w-100"

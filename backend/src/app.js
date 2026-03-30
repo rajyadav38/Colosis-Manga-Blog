@@ -28,6 +28,116 @@ app.use("/api/auth", authRoutes);
 app.get("/", (req, res) => {
   res.send("Colosis Backend is running 🚀");
 });
+app.get("/api/profile/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [rows] = await pool.query(
+      "SELECT username, bio FROM users WHERE id = ?",
+      [id],
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    res.json(rows[0]);
+  } catch (error) {
+    console.error("Profile route error:", error);
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+});
+app.post("/api/follow", async (req, res) => {
+  try {
+    const { followerId, followingId } = req.body;
+
+    if (followerId === followingId) {
+      return res.status(400).json({
+        message: "You cannot follow yourself",
+      });
+    }
+
+    await pool.query(
+      "INSERT INTO follows (follower_id, following_id) VALUES (?, ?)",
+      [followerId, followingId],
+    );
+
+    res.json({ message: "Followed successfully" });
+  } catch (error) {
+    console.error("Follow error:", error);
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+});
+app.delete("/api/unfollow", async (req, res) => {
+  try {
+    const { followerId, followingId } = req.body;
+
+    await pool.query(
+      "DELETE FROM follows WHERE follower_id = ? AND following_id = ?",
+      [followerId, followingId],
+    );
+
+    res.json({ message: "Unfollowed successfully" });
+  } catch (error) {
+    console.error("Unfollow error:", error);
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+});
+app.get("/api/follow-stats/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [followersRows] = await pool.query(
+      "SELECT COUNT(*) AS count FROM follows WHERE following_id = ?",
+      [id],
+    );
+
+    const [followingRows] = await pool.query(
+      "SELECT COUNT(*) AS count FROM follows WHERE follower_id = ?",
+      [id],
+    );
+
+    res.json({
+      followers: followersRows[0].count,
+      following: followingRows[0].count,
+    });
+  } catch (error) {
+    console.error("Follow stats error:", error);
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+});
+app.get("/api/is-following/:followerId/:followingId", async (req, res) => {
+  try {
+    const { followerId, followingId } = req.params;
+
+    const [rows] = await pool.query(
+      "SELECT * FROM follows WHERE follower_id = ? AND following_id = ?",
+      [followerId, followingId],
+    );
+
+    res.json({
+      isFollowing: rows.length > 0,
+    });
+  } catch (error) {
+    console.error("Follow check error:", error);
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+});
 const pool = require("./config/db");
 app.get("/db-test", async (req, res) => {
   try {
