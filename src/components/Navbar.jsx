@@ -1,5 +1,5 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import Logo from "../Logo.png";
 
 export default function Navbar({
@@ -11,6 +11,29 @@ export default function Navbar({
   user,
   setUser,
 }) {
+  const [results, setResults] = useState([]);
+  const navigate = useNavigate();
+
+  // -------------------------------
+  // Live Search Suggestions
+  // -------------------------------
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setResults([]);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      fetch(`http://localhost:5000/api/users/search-users/${searchQuery}`)
+        .then((res) => res.json())
+        .then((data) => setResults(data))
+        .catch((err) => console.error(err));
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   return (
     <nav
       className="navbar navbar-expand-lg px-3 mobile-grid-nav"
@@ -29,7 +52,6 @@ export default function Navbar({
         style={{ gap: "20px" }}
       >
         <ul className="navbar-nav mx-auto desktop-nav-links">
-          {/* nav links */}
           <Link
             className="nav-link"
             to="/"
@@ -91,24 +113,66 @@ export default function Navbar({
           </Link>
         </ul>
       </div>
-      {/* 🔍 SEARCH BAR */}
-      <input
-        type="text"
-        placeholder="Search manga, scrolls, users..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="form-control form-control-sm navbar-search nav-search"
-        style={{
-          width: "240px",
-          borderRadius: "20px",
-          padding: "6px 14px",
-          fontFamily: "'Kaushan Script', cursive",
-          background: theme.bg,
-          color: theme.text,
-          border: `1px solid ${theme.accent}`,
-          outline: "none",
-        }}
-      />
+
+      {/* 🔍 SEARCH BAR + LIVE RESULTS */}
+
+      <div style={{ position: "relative", width: "240px" }}>
+        <input
+          type="text"
+          placeholder="Search users..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="form-control form-control-sm navbar-search nav-search"
+          style={{
+            width: "240px",
+            borderRadius: "20px",
+            padding: "6px 14px",
+            fontFamily: "'Kaushan Script', cursive",
+            background: theme.bg,
+            color: theme.text,
+            border: `1px solid ${theme.accent}`,
+            outline: "none",
+          }}
+        />
+
+        {/* Suggestions Dropdown */}
+
+        {results.length > 0 && (
+          <div
+            className="shadow rounded mt-1"
+            style={{
+              position: "absolute",
+              top: "100%",
+              left: 0,
+              width: "100%",
+              background: theme.card,
+              zIndex: 1000,
+              borderRadius: "10px",
+              overflow: "hidden",
+            }}
+          >
+            {results.map((result) => (
+              <div
+                key={result.id}
+                className="p-2"
+                style={{
+                  cursor: "pointer",
+                  color: theme.text,
+                  borderBottom: "1px solid #333",
+                }}
+                onClick={() => {
+                  navigate(`/profile/${result.username}`);
+                  setSearchQuery("");
+                  setResults([]);
+                }}
+              >
+                @{result.username}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="d-flex align-items-center gap-2 ms-auto nav-actions">
         <button
           className="btn btn-sm"
@@ -122,6 +186,7 @@ export default function Navbar({
         >
           {darkMode ? "🌞 Light" : "🌙 Dark"}
         </button>
+
         {user ? (
           <button
             className="btn btn-sm ms-2"
