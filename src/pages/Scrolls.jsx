@@ -1,98 +1,396 @@
-import React, { useState, useEffect } from "react";
-import { animateCards } from "../utils/animations";
+import React, { useEffect, useRef, useState } from "react";
 
-export default function Scrolls({ theme }) {
-  const [likes, setLikes] = useState([0, 0, 0]);
-  const [comments, setComments] = useState([[], [], []]);
-  const [input, setInput] = useState("");
+export default function Scrolls() {
+  const [reels, setReels] = useState([]);
+  const [commentInputs, setCommentInputs] = useState({});
+  const videoRefs = useRef([]);
 
-  const reels = [
-    "https://cdn.pixabay.com/video/2020/11/23/57327-486718308_large.mp4",
-    "https://cdn.pixabay.com/video/2021/10/27/94787-634880935_large.mp4",
-    "https://cdn.pixabay.com/video/2021/04/26/72755-538846745_large.mp4",
-  ];
+  const currentUser = JSON.parse(localStorage.getItem("user"));
 
-  useEffect(() => animateCards(), []);
+  // FETCH REELS
+  const fetchReels = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/reels");
 
-  const shareReel = (url) => {
+      const data = await res.json();
+
+      setReels(data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchReels();
+  }, []);
+
+  // AUTOPLAY CURRENT VIDEO
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const video = entry.target;
+
+          if (entry.isIntersecting) {
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        });
+      },
+      {
+        threshold: 0.7,
+      },
+    );
+
+    videoRefs.current.forEach((video) => {
+      if (video) observer.observe(video);
+    });
+
+    return () => {
+      videoRefs.current.forEach((video) => {
+        if (video) observer.unobserve(video);
+      });
+    };
+  }, [reels]);
+
+  // LIKE REEL
+  const handleLike = async (reelId) => {
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/reels/like/${reelId}`,
+        {
+          method: "PUT",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            userId: currentUser.id,
+          }),
+        },
+      );
+
+      const data = await res.json();
+
+      if (data.message === "Already liked") {
+        alert("You already liked this reel");
+      }
+
+      fetchReels();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // COMMENT
+  const handleComment = async (reelId) => {
+    try {
+      const text = commentInputs[reelId];
+
+      if (!text) return;
+
+      await fetch(`http://localhost:5000/api/reels/comment/${reelId}`, {
+        method: "PUT",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          username: currentUser.username,
+          text,
+        }),
+      });
+
+      setCommentInputs({
+        ...commentInputs,
+        [reelId]: "",
+      });
+
+      fetchReels();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  // SHARE
+  const handleShare = (url) => {
     navigator.clipboard.writeText(url);
+
     alert("🔗 Reel link copied!");
   };
 
   return (
-    <div className="container py-4" style={{ color: theme.text }}>
-      <h2 className="fw-bold mb-3">🎬 Explore Scrolls</h2>
-
-      <div className="d-flex flex-column gap-4">
-        {reels.map((url, index) => (
-          <div
-            key={index}
-            className="p-3 shadow-lg rounded-lg anime-card glow"
+    <div
+      style={{
+        background: "linear-gradient(to right, #050816, #0b1026, #050816)",
+        minHeight: "100vh",
+        overflowY: "scroll",
+        scrollSnapType: "y mandatory",
+      }}
+    >
+      {reels.map((reel, index) => (
+        <div
+          key={reel._id}
+          style={{
+            height: "100vh",
+            width: "100%",
+            position: "relative",
+            overflow: "hidden",
+            scrollSnapAlign: "start",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {/* BLURRED BACKGROUND */}
+          <video
+            src={reel.videoUrl}
+            autoPlay
+            muted
+            loop
+            playsInline
             style={{
-              background: theme.card,
-              maxWidth: "500px",
-              margin: "0 auto",
+              position: "absolute",
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              filter: "blur(80px)",
+              transform: "scale(1.2)",
+              opacity: 0.25,
+            }}
+          />
+
+          {/* MAIN REEL */}
+          <div
+            style={{
+              width: "420px",
+              height: "88vh",
+              borderRadius: "28px",
+              overflow: "hidden",
+              position: "relative",
+              boxShadow: "0 0 45px rgba(255,0,120,0.45)",
+              zIndex: 2,
+              background: "#000",
             }}
           >
-            {/* Reel Video */}
+            {/* VIDEO */}
             <video
-              src={url}
-              controls
-              className="w-100 rounded mb-2"
-              style={{ maxHeight: "500px", objectFit: "cover" }}
+              ref={(el) => (videoRefs.current[index] = el)}
+              src={reel.videoUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls={false}
+              disablePictureInPicture
+              controlsList="nodownload nofullscreen noremoteplayback"
+              onContextMenu={(e) => e.preventDefault()}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                WebkitUserSelect: "none",
+                userSelect: "none",
+              }}
             />
 
-            {/* Like / Share */}
-            <div className="d-flex align-items-center gap-3 mb-2">
-              <button
-                className="btn btn-sm"
-                style={{ background: theme.accent, color: "white" }}
-                onClick={() =>
-                  setLikes(likes.map((v, i) => (i === index ? v + 1 : v)))
-                }
+            {/* OVERLAY */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                padding: "24px",
+                background: "linear-gradient(transparent, rgba(0,0,0,0.95))",
+                color: "white",
+                zIndex: 5,
+              }}
+            >
+              <h1
+                style={{
+                  fontWeight: "900",
+                  fontSize: "2.2rem",
+                  marginBottom: "10px",
+                }}
               >
-                ❤️ {likes[index]}
-              </button>
+                @{reel.username}
+              </h1>
+
+              <p
+                style={{
+                  fontSize: "1rem",
+                  color: "#ddd",
+                  marginBottom: 0,
+                }}
+              >
+                {reel.caption}
+              </p>
+            </div>
+          </div>
+
+          {/* RIGHT ACTION BUTTONS */}
+          <div
+            style={{
+              position: "absolute",
+              right: "40px",
+              bottom: "120px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "22px",
+              zIndex: 10,
+            }}
+          >
+            {/* LIKE */}
+            <button
+              onClick={() => handleLike(reel._id)}
+              style={{
+                width: "78px",
+                height: "78px",
+                borderRadius: "50%",
+                border: "1px solid rgba(255,255,255,0.2)",
+                background: "rgba(255,255,255,0.08)",
+                backdropFilter: "blur(14px)",
+                color: "white",
+                fontSize: "1.2rem",
+                cursor: "pointer",
+              }}
+            >
+              ❤️
+              <div>{reel.likes || 0}</div>
+            </button>
+
+            {/* COMMENT */}
+            <button
+              style={{
+                width: "78px",
+                height: "78px",
+                borderRadius: "50%",
+                border: "1px solid rgba(255,255,255,0.2)",
+                background: "rgba(255,255,255,0.08)",
+                backdropFilter: "blur(14px)",
+                color: "white",
+                fontSize: "1.2rem",
+              }}
+            >
+              💬
+              <div>{reel.comments?.length || 0}</div>
+            </button>
+
+            {/* SHARE */}
+            <button
+              onClick={() => handleShare(reel.videoUrl)}
+              style={{
+                width: "78px",
+                height: "78px",
+                borderRadius: "50%",
+                border: "1px solid rgba(255,255,255,0.2)",
+                background: "rgba(255,255,255,0.08)",
+                backdropFilter: "blur(14px)",
+                color: "white",
+                fontSize: "1.3rem",
+                cursor: "pointer",
+              }}
+            >
+              🔗
+            </button>
+          </div>
+
+          {/* COMMENT SECTION */}
+          <div
+            style={{
+              position: "absolute",
+              right: "140px",
+              bottom: "40px",
+              width: "340px",
+              zIndex: 10,
+            }}
+          >
+            {/* INPUT */}
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                marginBottom: "14px",
+              }}
+            >
+              <input
+                value={commentInputs[reel._id] || ""}
+                onChange={(e) =>
+                  setCommentInputs({
+                    ...commentInputs,
+                    [reel._id]: e.target.value,
+                  })
+                }
+                placeholder="Write comment..."
+                style={{
+                  flex: 1,
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  color: "white",
+                  borderRadius: "20px",
+                  padding: "14px",
+                  outline: "none",
+                  backdropFilter: "blur(12px)",
+                }}
+              />
 
               <button
-                className="btn btn-outline-secondary btn-sm"
-                onClick={() => shareReel(url)}
+                onClick={() => handleComment(reel._id)}
+                style={{
+                  border: "none",
+                  borderRadius: "18px",
+                  background: "#ff3b6b",
+                  color: "white",
+                  padding: "0 22px",
+                  fontWeight: "bold",
+                  cursor: "pointer",
+                }}
               >
-                🔗 Share
+                Post
               </button>
             </div>
 
-            {/* Comment Input */}
-            <input
-              className="form-control form-control-sm mb-2"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Add a comment..."
-            />
-
-            <button
-              className="btn btn-outline-secondary btn-sm"
-              onClick={() => {
-                const copy = [...comments];
-                copy[index].push(input);
-                setComments(copy);
-                setInput("");
+            {/* COMMENTS */}
+            <div
+              style={{
+                maxHeight: "220px",
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px",
               }}
             >
-              Comment
-            </button>
+              {reel.comments?.map((comment, i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: "rgba(255,255,255,0.08)",
+                    padding: "12px",
+                    borderRadius: "18px",
+                    color: "white",
+                    backdropFilter: "blur(10px)",
+                  }}
+                >
+                  <strong>@{comment.username}</strong>
 
-            {/* Comment List */}
-            <ul className="list-group mt-2 small">
-              {comments[index].map((c, i) => (
-                <li className="list-group-item" key={i}>
-                  {c}
-                </li>
+                  <div
+                    style={{
+                      marginTop: "4px",
+                      color: "#ddd",
+                    }}
+                  >
+                    {comment.text}
+                  </div>
+                </div>
               ))}
-            </ul>
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
     </div>
   );
 }

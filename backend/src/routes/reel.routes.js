@@ -45,4 +45,87 @@ router.post("/create", upload.single("video"), async (req, res) => {
   }
 });
 
+router.get("/", async (req, res) => {
+  try {
+    const reels = await Reel.find().sort({ createdAt: -1 });
+
+    res.json(reels);
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Failed to fetch reels",
+    });
+  }
+});
+
+router.put("/like/:id", async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    const reel = await Reel.findById(req.params.id);
+
+    if (!reel) {
+      return res.status(404).json({
+        message: "Reel not found",
+      });
+    }
+
+    // already liked
+    if (reel.likedBy.includes(userId)) {
+      return res.json({
+        message: "Already liked",
+        likes: reel.likes,
+      });
+    }
+
+    reel.likes += 1;
+
+    reel.likedBy.push(userId);
+
+    await reel.save();
+
+    res.json({
+      likes: reel.likes,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+});
+
+router.put("/comment/:id", async (req, res) => {
+  try {
+    const { username, text } = req.body;
+
+    const reel = await Reel.findById(req.params.id);
+
+    if (!reel) {
+      return res.status(404).json({
+        message: "Reel not found",
+      });
+    }
+
+    reel.comments.push({
+      username,
+      text,
+    });
+
+    await reel.save();
+
+    res.json({
+      message: "Comment added",
+      comments: reel.comments,
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Server error",
+    });
+  }
+});
 module.exports = router;

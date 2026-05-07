@@ -1,50 +1,36 @@
 const mongoose = require("mongoose");
 
-const reelSchema = new mongoose.Schema({
-  userId: {
-    type: Number,
-    required: true,
-  },
+const reelSchema = new mongoose.Schema(
+  {
+    userId: Number,
 
-  username: {
-    type: String,
-    required: true,
-  },
+    username: String,
 
-  caption: {
-    type: String,
-    default: "",
-  },
+    caption: String,
 
-  videoUrl: {
-    type: String,
-    required: true,
-  },
+    videoUrl: String,
 
-  thumbnailUrl: {
-    type: String,
-    default: "",
-  },
+    likes: {
+      type: Number,
+      default: 0,
+    },
 
-  likes: {
-    type: [Number],
-    default: [],
-  },
+    likedBy: [
+      {
+        type: Number,
+      },
+    ],
 
-  commentsCount: {
-    type: Number,
-    default: 0,
+    comments: [
+      {
+        username: String,
+        text: String,
+      },
+    ],
   },
-
-  views: {
-    type: Number,
-    default: 0,
+  {
+    timestamps: true,
   },
-
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+);
 
 module.exports = mongoose.model("Reel", reelSchema);
