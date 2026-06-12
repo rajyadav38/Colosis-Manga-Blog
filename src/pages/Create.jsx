@@ -6,6 +6,11 @@ export default function Create({ theme }) {
   const [videoFile, setVideoFile] = useState(null);
   const [caption, setCaption] = useState("");
   const [loading, setLoading] = useState(false);
+  const [coverImage, setCoverImage] = useState(null);
+  const [storyTitle, setStoryTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [storyType, setStoryType] = useState("novel");
+  const [genres, setGenres] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user"));
 
@@ -51,6 +56,46 @@ export default function Create({ theme }) {
       alert(error.message || "Upload failed");
     } finally {
       setLoading(false);
+    }
+  };
+  const handleCreateStory = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/stories/create", {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        body: JSON.stringify({
+          authorId: user.id,
+          authorUsername: user.username,
+
+          title: storyTitle,
+          description,
+
+          coverImage: coverImage?.name || "",
+
+          type: storyType,
+
+          genres: genres.split(",").map((g) => g.trim()),
+        }),
+      });
+
+      const data = await res.json();
+
+      alert("Story Created Successfully!");
+
+      setStoryTitle("");
+      setDescription("");
+      setGenres("");
+      setCoverImage(null);
+
+      console.log(data);
+    } catch (error) {
+      console.log(error);
+
+      alert("Failed to create story");
     }
   };
 
@@ -113,6 +158,80 @@ export default function Create({ theme }) {
           disabled={loading}
         >
           {loading ? "Uploading..." : "Post Reel"}
+        </button>
+      </div>
+      <hr className="my-5" />
+
+      <h2 className="fw-bold mb-3">📚 Create Story</h2>
+
+      <div
+        className="p-4 rounded shadow-lg anime-card glow"
+        style={{
+          background: theme.card,
+        }}
+      >
+        <label className="fw-semibold">Cover Image</label>
+
+        <input
+          type="file"
+          accept="image/*"
+          className="form-control mb-3"
+          onChange={(e) => setCoverImage(e.target.files[0])}
+        />
+
+        <label className="fw-semibold">Story Title</label>
+
+        <input
+          type="text"
+          className="form-control mb-3"
+          placeholder="Enter story title..."
+          value={storyTitle}
+          onChange={(e) => setStoryTitle(e.target.value)}
+        />
+
+        <label className="fw-semibold">Description</label>
+
+        <textarea
+          className="form-control mb-3"
+          rows="4"
+          placeholder="Describe your story..."
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+
+        <label className="fw-semibold">Story Type</label>
+
+        <select
+          className="form-control mb-3"
+          value={storyType}
+          onChange={(e) => setStoryType(e.target.value)}
+        >
+          <option value="novel">Novel</option>
+
+          <option value="manga">Manga</option>
+
+          <option value="comic">Comic</option>
+        </select>
+
+        <label className="fw-semibold">Genres</label>
+
+        <input
+          type="text"
+          className="form-control mb-3"
+          placeholder="Fantasy, Action, Romance..."
+          value={genres}
+          onChange={(e) => setGenres(e.target.value)}
+        />
+
+        <button
+          className="btn w-100 glow"
+          style={{
+            background: theme.accent,
+            color: "white",
+          }}
+          onClick={handleCreateStory}
+        >
+          Create Story
         </button>
       </div>
     </div>

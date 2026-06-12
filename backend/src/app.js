@@ -10,6 +10,8 @@ const updateUserRoutes = require("./routes/updateUser.route");
 const publicProfileRoutes = require("./routes/publicProfile.route");
 const searchUsersRoutes = require("./routes/searchUsers.route");
 const reelRoutes = require("./routes/reel.routes");
+const storyRoutes = require("./routes/story.routes");
+const chapterRoutes = require("./routes/chapter.routes");
 /* 🔴 BODY PARSER — THIS FIXES YOUR ERROR */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -20,6 +22,8 @@ app.use(cors());
 app.use(express.json());
 /* Routes */
 app.use("/api/reels", reelRoutes);
+app.use("/api/stories", storyRoutes);
+app.use("/api/chapters", chapterRoutes);
 app.use("/api/users", searchUsersRoutes);
 app.use("/api/users", publicProfileRoutes);
 app.use("/api/users", updateUserRoutes);
