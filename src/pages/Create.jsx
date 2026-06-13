@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { animateCards } from "../utils/animations";
-
+import { useNavigate } from "react-router-dom";
 export default function Create({ theme }) {
   const [video, setVideo] = useState(null);
   const [videoFile, setVideoFile] = useState(null);
@@ -13,7 +13,7 @@ export default function Create({ theme }) {
   const [genres, setGenres] = useState("");
 
   const user = JSON.parse(localStorage.getItem("user"));
-
+  const navigate = useNavigate();
   useEffect(() => animateCards(), []);
 
   const handleUpload = async () => {
@@ -84,7 +84,7 @@ export default function Create({ theme }) {
 
       const data = await res.json();
 
-      alert("Story Created Successfully!");
+      navigate(`/story/manage/${data._id}`);
 
       setStoryTitle("");
       setDescription("");

@@ -17,6 +17,8 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import EditProfile from "./pages/EditProfile";
 import PublicProfile from "./pages/PublicProfile";
+import StoryManager from "./pages/StoryManager";
+import ReadStory from "./pages/ReadStory";
 export default function MangaBlogApp() {
   const [darkMode, setDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,6 +75,14 @@ export default function MangaBlogApp() {
                     <Route
                       path="/profile/:username"
                       element={<PublicProfile theme={theme} />}
+                    />
+                    <Route
+                      path="/story/manage/:id"
+                      element={<StoryManager theme={theme} />}
+                    />
+                    <Route
+                      path="/story/read/:id"
+                      element={<ReadStory theme={theme} />}
                     />
                   </Routes>
                 </>
