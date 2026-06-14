@@ -34,6 +34,19 @@ const storySchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    generatedBookHtml: {
+      type: String,
+      default: "",
+    },
+
+    status: {
+      type: String,
+      default: "draft",
+    },
+
+    publishedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

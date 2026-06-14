@@ -108,6 +108,11 @@ export default function StoryManager({ theme }) {
       >
         📖 Read Story
       </button>
+      <button className="btn btn-warning">🤖 Generate Book</button>
+
+      <button className="btn btn-success">🚀 Publish</button>
+
+      <button className="btn btn-dark">📄 Export PDF</button>
       <hr />
 
       <h3 className="mb-3">Add New Chapter</h3>
