@@ -96,16 +96,17 @@ html {
 .app.dark .navbar {
   background: linear-gradient(180deg, #141826, #0d0f18);
 }
-/* 🌙 Dark Mode Headings */
-.app.dark h1,
-.app.dark h2,
-.app.dark h3,
-.app.dark h4 {
+/* 🌙 Dark Mode Site Headings */
+
+.app.dark .page-title,
+.app.dark .section-title,
+.app.dark .hero-title {
   color: #ffffff;
   letter-spacing: 0.4px;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7);
 }
-.app.dark h1 {
+
+.app.dark .hero-title {
   background: linear-gradient(135deg, #ffffff, #d9dcff);
   background-clip: text;
   -webkit-background-clip: text;
@@ -405,4 +406,37 @@ html {
     justify-content: center;
     width: 100%;
   }
+}
+
+/* =========================
+   BOOK READER FIX
+========================= */
+
+.book-reader {
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.book-reader h1,
+.book-reader h2,
+.book-reader h3,
+.book-reader h4 {
+  text-shadow: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: initial !important;
+  color: #222 !important;
+}
+
+.book-reader p,
+.book-reader span,
+.book-reader div {
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+.app.dark .book-reader {
+  background: transparent !important;
 }

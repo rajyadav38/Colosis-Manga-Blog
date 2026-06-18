@@ -31,6 +31,7 @@ app.use("/api/chat", messageRoutes);
 app.use("/api/chat", conversationRoutes);
 app.use("/api", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/uploads", express.static("uploads"));
 app.get("/", (req, res) => {
   res.send("Colosis Backend is running 🚀");
 });

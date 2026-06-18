@@ -1,131 +1,124 @@
-import React, { useState, useEffect } from "react";
-import { animateCards } from "../utils/animations";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Home({ theme }) {
-  const [preview, setPreview] = useState(null);
+  const navigate = useNavigate();
 
-  // Trending state (moved from Trending component)
-  const [likes, setLikes] = useState([0, 0, 0, 0]);
-  const [comments, setComments] = useState([[], [], [], []]);
-  const [input, setInput] = useState("");
+  const [stories, setStories] = useState([]);
 
-  // Latest Manga
-  const latest = [1, 2, 3, 4];
+  const fetchPublishedStories = async () => {
+    try {
+      const res = await fetch("http://localhost:5000/api/stories/published");
 
-  useEffect(() => animateCards(), []);
+      const data = await res.json();
+
+      setStories(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchPublishedStories();
+  }, []);
+
+  const handleLike = async (storyId) => {
+    try {
+      await fetch(`http://localhost:5000/api/stories/like/${storyId}`, {
+        method: "PUT",
+      });
+
+      fetchPublishedStories();
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   return (
-    <div className="container py-4" style={{ color: theme.text }}>
-      {/* ✍️ Write Manga */}
-      <h2 className="mb-3 fw-bold">✍️ Write Your Manga Story</h2>
+    <div
+      className="container py-4"
+      style={{
+        color: theme.text,
+      }}
+    >
+      <h1 className="fw-bold mb-4">📚 Latest Published Stories</h1>
 
-      <div
-        className="p-4 shadow-lg rounded-lg anime-card glow mb-5"
-        style={{ background: theme.card }}
-      >
-        <label className="fw-semibold">Upload Manga Image</label>
-        <input
-          type="file"
-          className="form-control mb-3"
-          accept="image/*"
-          onChange={(e) => setPreview(URL.createObjectURL(e.target.files[0]))}
-        />
-
-        {preview && (
-          <img src={preview} className="rounded mb-3 img-fluid" alt="preview" />
-        )}
-
-        <label className="fw-semibold">Story (max 500 words)</label>
-        <textarea className="form-control mb-3" rows="7" maxLength="500" />
-
-        <button
-          className="btn glow w-100"
-          style={{ background: theme.accent, color: "white" }}
-        >
-          Post Manga
-        </button>
-      </div>
-
-      {/* 🔥 Trending Manga */}
-      <h2 className="mb-3 fw-bold">🔥 Trending Manga</h2>
-
-      <div className="row g-3 mb-5">
-        {[1, 2, 3, 4].map((item, index) => (
-          <div className="col-12 col-md-4" key={item}>
-            <div
-              className="p-3 shadow-lg rounded-lg anime-card glow"
-              style={{ background: theme.card }}
-            >
-              <img
-                src={`https://via.placeholder.com/300x200?text=Manga+${item}`}
-                className="img-fluid rounded mb-2"
-                alt=""
-              />
-
-              <h5 className="fw-bold" style={{ color: theme.accent }}>
-                Manga Title {item}
-              </h5>
-
-              <button
-                className="btn glow btn-sm mb-2"
-                style={{ background: theme.accent, color: "white" }}
-                onClick={() =>
-                  setLikes(likes.map((v, i) => (i === index ? v + 1 : v)))
-                }
-              >
-                ❤️ {likes[index]}
-              </button>
-
-              <input
-                className="form-control form-control-sm mb-2"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Add comment..."
-              />
-
-              <button
-                className="btn glow btn-outline-secondary btn-sm"
-                onClick={() => {
-                  const copy = [...comments];
-                  copy[index].push(input);
-                  setComments(copy);
-                  setInput("");
+      {stories.length === 0 ? (
+        <p>No published stories yet.</p>
+      ) : (
+        <div className="row">
+          {stories.map((story) => (
+            <div key={story._id} className="col-lg-4 col-md-6 mb-4">
+              <div
+                className="card border-0 shadow-lg h-100"
+                style={{
+                  background: theme.card,
+                  borderRadius: "20px",
+                  overflow: "hidden",
                 }}
               >
-                Comment
-              </button>
+                {/* Cover Image */}
+                <img
+                  src={`http://localhost:5000/uploads/${story.coverImage}`}
+                  alt={story.title}
+                  style={{
+                    width: "100%",
+                    height: "320px",
+                    objectFit: "cover",
+                  }}
+                />
 
-              <ul className="list-group mt-2 small">
-                {comments[index].map((c, i) => (
-                  <li className="list-group-item" key={i}>
-                    {c}
-                  </li>
-                ))}
-              </ul>
+                <div className="card-body d-flex flex-column">
+                  <h3
+                    className="fw-bold"
+                    style={{
+                      color: theme.accent,
+                    }}
+                  >
+                    {story.title}
+                  </h3>
+
+                  <p className="text-muted mb-2">by @{story.authorUsername}</p>
+
+                  <p
+                    style={{
+                      minHeight: "60px",
+                    }}
+                  >
+                    {story.description}
+                  </p>
+
+                  <div className="d-flex gap-3 mb-3">
+                    <span>👁️ {story.views}</span>
+
+                    <span>❤️ {story.likes}</span>
+                  </div>
+
+                  <div className="mt-auto d-flex gap-2">
+                    <button
+                      className="btn"
+                      style={{
+                        background: theme.accent,
+                        color: "white",
+                      }}
+                      onClick={() => navigate(`/book/${story._id}`)}
+                    >
+                      📖 Read Book
+                    </button>
+
+                    <button
+                      className="btn btn-danger"
+                      onClick={() => handleLike(story._id)}
+                    >
+                      ❤️ Like
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-
-      {/* 🆕 Latest Manga */}
-      <h2 className="mb-3 fw-bold">🆕 Latest Manga</h2>
-
-      <div className="row g-3 mb-5">
-        {latest.map((l) => (
-          <div className="col-6 col-md-3" key={l}>
-            <div
-              className="p-2 shadow rounded anime-card glow"
-              style={{ background: theme.card }}
-            >
-              <img
-                src={`https://via.placeholder.com/300x300?text=Latest+${l}`}
-                className="img-fluid rounded"
-                alt=""
-              />
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

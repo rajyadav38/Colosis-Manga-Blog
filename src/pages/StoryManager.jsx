@@ -41,6 +41,44 @@ export default function StoryManager({ theme }) {
     fetchChapters();
   }, []);
 
+  const handleGenerateBook = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/stories/generate-book/${id}`,
+        {
+          method: "POST",
+        },
+      );
+
+      const data = await res.json();
+
+      alert(data.message);
+
+      fetchStory();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handlePublish = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/stories/publish/${id}`,
+        {
+          method: "PUT",
+        },
+      );
+
+      const data = await res.json();
+
+      alert(data.message);
+
+      fetchStory();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   // ADD CHAPTER
   const handleAddChapter = async () => {
     try {
@@ -98,19 +136,26 @@ export default function StoryManager({ theme }) {
       <h1 className="fw-bold mb-2">📚 {story.title}</h1>
 
       <p className="text-muted">{story.description}</p>
+
+      {story.isPublished && (
+        <span className="badge bg-success mb-3">Published</span>
+      )}
       <button
         className="btn me-2"
         style={{
           background: theme.accent,
           color: "white",
         }}
-        onClick={() => navigate(`/story/read/${id}`)}
+        onClick={() => navigate(`/book/${id}`)}
       >
         📖 Read Story
       </button>
-      <button className="btn btn-warning">🤖 Generate Book</button>
-
-      <button className="btn btn-success">🚀 Publish</button>
+      <button className="btn btn-warning" onClick={handleGenerateBook}>
+        🤖 Generate Book
+      </button>
+      <button className="btn btn-success" onClick={handlePublish}>
+        🚀 Publish
+      </button>
 
       <button className="btn btn-dark">📄 Export PDF</button>
       <hr />

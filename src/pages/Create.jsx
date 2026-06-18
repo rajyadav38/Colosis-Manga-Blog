@@ -60,26 +60,25 @@ export default function Create({ theme }) {
   };
   const handleCreateStory = async () => {
     try {
+      const formData = new FormData();
+
+      formData.append("authorId", user.id);
+      formData.append("authorUsername", user.username);
+
+      formData.append("title", storyTitle);
+      formData.append("description", description);
+
+      formData.append("type", storyType);
+
+      formData.append("genres", genres);
+
+      if (coverImage) {
+        formData.append("coverImage", coverImage);
+      }
+
       const res = await fetch("http://localhost:5000/api/stories/create", {
         method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        body: JSON.stringify({
-          authorId: user.id,
-          authorUsername: user.username,
-
-          title: storyTitle,
-          description,
-
-          coverImage: coverImage?.name || "",
-
-          type: storyType,
-
-          genres: genres.split(",").map((g) => g.trim()),
-        }),
+        body: formData,
       });
 
       const data = await res.json();
@@ -90,11 +89,8 @@ export default function Create({ theme }) {
       setDescription("");
       setGenres("");
       setCoverImage(null);
-
-      console.log(data);
     } catch (error) {
       console.log(error);
-
       alert("Failed to create story");
     }
   };

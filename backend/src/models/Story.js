@@ -44,8 +44,14 @@ const storySchema = new mongoose.Schema(
       default: "draft",
     },
 
+    isPublished: {
+      type: Boolean,
+      default: false,
+    },
+
     publishedAt: {
       type: Date,
+      default: null,
     },
   },
   {
