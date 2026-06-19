@@ -53,6 +53,16 @@ const storySchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+
+    viewedBy: {
+      type: [Number],
+      default: [],
+    },
+
+    likedBy: {
+      type: [Number],
+      default: [],
+    },
   },
   {
     timestamps: true,

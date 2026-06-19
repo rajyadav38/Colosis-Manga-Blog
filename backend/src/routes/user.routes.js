@@ -4,7 +4,7 @@ const db = require("../config/db"); // your mysql connection
 
 router.get("/users", async (req, res) => {
   try {
-    const [users] = await db.query("SELECT id, username FROM users");
+    const [users] = await db.query("SELECT username, bio, avatar FROM users");
 
     res.json(users);
   } catch (error) {

@@ -6,6 +6,7 @@ export default function Home({ theme }) {
 
   const [stories, setStories] = useState([]);
 
+  const user = JSON.parse(localStorage.getItem("user"));
   const fetchPublishedStories = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/stories/published");
@@ -24,9 +25,12 @@ export default function Home({ theme }) {
 
   const handleLike = async (storyId) => {
     try {
-      await fetch(`http://localhost:5000/api/stories/like/${storyId}`, {
-        method: "PUT",
-      });
+      await fetch(
+        `http://localhost:5000/api/stories/like/${storyId}/${user.id}`,
+        {
+          method: "PUT",
+        },
+      );
 
       fetchPublishedStories();
     } catch (error) {

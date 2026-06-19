@@ -4,14 +4,13 @@ const db = require("../config/db");
 
 // Update profile
 router.put("/update-profile", async (req, res) => {
-  const { id, username, bio } = req.body;
+  const { id, username, bio, avatar } = req.body;
 
   try {
-    await db.query("UPDATE users SET username = ?, bio = ? WHERE id = ?", [
-      username,
-      bio,
-      id,
-    ]);
+    await db.query(
+      "UPDATE users SET username = ?, bio = ?, avatar = ? WHERE id = ?",
+      [username, bio, avatar, id],
+    );
 
     res.json({
       success: true,

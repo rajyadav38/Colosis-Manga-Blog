@@ -45,6 +45,22 @@ router.post("/create", upload.single("coverImage"), async (req, res) => {
   }
 });
 
+// Get all stories by author
+router.get("/author/:authorId", async (req, res) => {
+  try {
+    const stories = await Story.find({
+      authorId: req.params.authorId,
+    }).sort({ createdAt: -1 });
+
+    res.json(stories);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Server Error",
+    });
+  }
+});
 // GET ALL STORIES
 router.get("/", async (req, res) => {
   try {
@@ -194,9 +210,11 @@ router.put("/publish/:id", async (req, res) => {
   }
 });
 
-router.put("/view/:id", async (req, res) => {
+router.put("/view/:id/:userId", async (req, res) => {
   try {
-    const story = await Story.findById(req.params.id);
+    const { id, userId } = req.params;
+
+    const story = await Story.findById(id);
 
     if (!story) {
       return res.status(404).json({
@@ -204,13 +222,14 @@ router.put("/view/:id", async (req, res) => {
       });
     }
 
-    story.views += 1;
+    if (!story.viewedBy.includes(Number(userId))) {
+      story.views += 1;
+      story.viewedBy.push(Number(userId));
 
-    await story.save();
+      await story.save();
+    }
 
-    res.json({
-      views: story.views,
-    });
+    res.json(story);
   } catch (error) {
     console.log(error);
 
@@ -220,11 +239,29 @@ router.put("/view/:id", async (req, res) => {
   }
 });
 
-router.put("/like/:id", async (req, res) => {
+router.put("/like/:id/:userId", async (req, res) => {
   try {
-    const story = await Story.findById(req.params.id);
+    const { id, userId } = req.params;
 
-    story.likes += 1;
+    const story = await Story.findById(id);
+
+    if (!story) {
+      return res.status(404).json({
+        message: "Story not found",
+      });
+    }
+
+    const uid = Number(userId);
+
+    if (story.likedBy.includes(uid)) {
+      story.likes -= 1;
+
+      story.likedBy = story.likedBy.filter((id) => id !== uid);
+    } else {
+      story.likes += 1;
+
+      story.likedBy.push(uid);
+    }
 
     await story.save();
 

@@ -5,15 +5,35 @@ export default function EditProfile({ theme }) {
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user"));
-
+  const [avatarFile, setAvatarFile] = useState(null);
   const [username, setUsername] = useState(user?.username || "");
   const [bio, setBio] = useState("");
-  const [avatar, setAvatar] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      let avatarUrl = user?.avatar || "";
+
+      // Upload avatar to Cloudinary first
+      if (avatarFile) {
+        const formData = new FormData();
+
+        formData.append("avatar", avatarFile);
+
+        const uploadRes = await fetch(
+          `http://localhost:5000/api/users/upload-avatar/${user.id}`,
+          {
+            method: "POST",
+            body: formData,
+          },
+        );
+
+        const uploadData = await uploadRes.json();
+
+        avatarUrl = uploadData.avatar;
+      }
+
       const res = await fetch(
         "http://localhost:5000/api/users/update-profile",
         {
@@ -25,6 +45,7 @@ export default function EditProfile({ theme }) {
             id: user.id,
             username,
             bio,
+            avatar: avatarUrl,
           }),
         },
       );
@@ -33,23 +54,22 @@ export default function EditProfile({ theme }) {
 
       alert(data.message);
 
-      // update localStorage username
+      // update localStorage
       localStorage.setItem(
         "user",
         JSON.stringify({
           ...user,
           username,
+          avatar: avatarUrl,
         }),
       );
 
-      // redirect back to profile page
       navigate("/profile");
     } catch (error) {
       console.log("Update error:", error);
       alert("Something went wrong");
     }
   };
-
   return (
     <div
       className="container py-5"
@@ -81,9 +101,9 @@ export default function EditProfile({ theme }) {
           <label className="fw-semibold">Profile Picture</label>
           <input
             type="file"
-            className="form-control mb-4"
             accept="image/*"
-            onChange={(e) => setAvatar(e.target.files[0])}
+            className="form-control mb-3"
+            onChange={(e) => setAvatarFile(e.target.files[0])}
           />
 
           <button

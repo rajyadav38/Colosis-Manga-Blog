@@ -12,6 +12,7 @@ const searchUsersRoutes = require("./routes/searchUsers.route");
 const reelRoutes = require("./routes/reel.routes");
 const storyRoutes = require("./routes/story.routes");
 const chapterRoutes = require("./routes/chapter.routes");
+const avatarRoutes = require("./routes/avatar.routes");
 /* 🔴 BODY PARSER — THIS FIXES YOUR ERROR */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -31,6 +32,7 @@ app.use("/api/chat", messageRoutes);
 app.use("/api/chat", conversationRoutes);
 app.use("/api", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/users", avatarRoutes);
 app.use("/uploads", express.static("uploads"));
 app.get("/", (req, res) => {
   res.send("Colosis Backend is running 🚀");
@@ -40,7 +42,7 @@ app.get("/api/profile/:id", async (req, res) => {
     const { id } = req.params;
 
     const [rows] = await pool.query(
-      "SELECT username, bio FROM users WHERE id = ?",
+      "SELECT username, bio, avatar FROM users WHERE id = ?",
       [id],
     );
 

@@ -6,15 +6,17 @@ export default function BookReader() {
 
   const [bookHtml, setBookHtml] = useState("");
   const [loading, setLoading] = useState(true);
+  const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
     fetchBook();
 
-    fetch(`http://localhost:5000/api/stories/view/${id}`, {
-      method: "PUT",
-    }).catch(console.error);
+    if (user) {
+      fetch(`http://localhost:5000/api/stories/view/${id}/${user.id}`, {
+        method: "PUT",
+      });
+    }
   }, []);
-
   const fetchBook = async () => {
     try {
       const res = await fetch(`http://localhost:5000/api/stories/${id}`);

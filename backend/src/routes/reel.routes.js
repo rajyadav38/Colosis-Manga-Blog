@@ -45,6 +45,23 @@ router.post("/create", upload.single("video"), async (req, res) => {
   }
 });
 
+// Get reels by user
+router.get("/user/:userId", async (req, res) => {
+  try {
+    const reels = await Reel.find({
+      userId: req.params.userId,
+    }).sort({ createdAt: -1 });
+
+    res.json(reels);
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      message: "Server Error",
+    });
+  }
+});
+
 router.get("/", async (req, res) => {
   try {
     const reels = await Reel.find().sort({ createdAt: -1 });
