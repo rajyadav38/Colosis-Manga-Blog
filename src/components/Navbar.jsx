@@ -13,6 +13,7 @@ export default function Navbar({
 }) {
   const [results, setResults] = useState([]);
   const navigate = useNavigate();
+  const API_URL = process.env.REACT_APP_API_URL;
 
   // -------------------------------
   // Live Search Suggestions
@@ -25,7 +26,7 @@ export default function Navbar({
     }
 
     const timer = setTimeout(() => {
-      fetch(`http://localhost:5000/api/users/search-users/${searchQuery}`)
+      fetch(`${API_URL}/api/users/search-users/${searchQuery}`)
         .then((res) => res.json())
         .then((data) => setResults(data))
         .catch((err) => console.error(err));

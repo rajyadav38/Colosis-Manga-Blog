@@ -11,6 +11,7 @@ export default function Create({ theme }) {
   const [description, setDescription] = useState("");
   const [storyType, setStoryType] = useState("novel");
   const [genres, setGenres] = useState("");
+  const API_URL = process.env.REACT_APP_API_URL;
 
   const user = JSON.parse(localStorage.getItem("user"));
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ export default function Create({ theme }) {
       formData.append("username", user.username);
       formData.append("caption", caption);
 
-      const res = await fetch("http://localhost:5000/api/reels/create", {
+      const res = await fetch(`${API_URL}/api/reels/create`, {
         method: "POST",
         body: formData,
       });
@@ -76,7 +77,7 @@ export default function Create({ theme }) {
         formData.append("coverImage", coverImage);
       }
 
-      const res = await fetch("http://localhost:5000/api/stories/create", {
+      const res = await fetch(`${API_URL}/api/stories/create`, {
         method: "POST",
         body: formData,
       });

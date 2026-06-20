@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 
 export default function BookReader() {
   const { id } = useParams();
-
+  const API_URL = process.env.REACT_APP_API_URL;
   const [bookHtml, setBookHtml] = useState("");
   const [loading, setLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem("user"));
@@ -12,14 +12,14 @@ export default function BookReader() {
     fetchBook();
 
     if (user) {
-      fetch(`http://localhost:5000/api/stories/view/${id}/${user.id}`, {
+      fetch(`${API_URL}/api/stories/view/${id}/${user.id}`, {
         method: "PUT",
       });
     }
   }, []);
   const fetchBook = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/stories/${id}`);
+      const res = await fetch(`${API_URL}/api/stories/${id}`);
 
       const data = await res.json();
 

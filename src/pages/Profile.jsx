@@ -5,7 +5,7 @@ import { animateCards } from "../utils/animations";
 export default function Profile({ theme }) {
   const navigate = useNavigate();
   const location = useLocation();
-
+  const API_URL = process.env.REACT_APP_API_URL;
   const user = JSON.parse(localStorage.getItem("user"));
 
   const [profile, setProfile] = useState(null);
@@ -23,18 +23,14 @@ export default function Profile({ theme }) {
   const fetchProfile = useCallback(async () => {
     try {
       // profile
-      const profileRes = await fetch(
-        `http://localhost:5000/api/profile/${user.id}`,
-      );
+      const profileRes = await fetch(`${API_URL}/api/profile/${user.id}`);
 
       const profileData = await profileRes.json();
 
       setProfile(profileData);
 
       // followers
-      const statsRes = await fetch(
-        `http://localhost:5000/api/follow-stats/${user.id}`,
-      );
+      const statsRes = await fetch(`${API_URL}/api/follow-stats/${user.id}`);
 
       const statsData = await statsRes.json();
 
@@ -42,7 +38,7 @@ export default function Profile({ theme }) {
 
       // stories
       const storiesRes = await fetch(
-        `http://localhost:5000/api/stories/author/${user.id}`,
+        `${API_URL}/api/stories/author/${user.id}`,
       );
 
       const storiesData = await storiesRes.json();
@@ -50,9 +46,7 @@ export default function Profile({ theme }) {
       setStories(storiesData);
 
       // reels
-      const reelsRes = await fetch(
-        `http://localhost:5000/api/reels/user/${user.id}`,
-      );
+      const reelsRes = await fetch(`${API_URL}/api/reels/user/${user.id}`);
 
       const reelsData = await reelsRes.json();
 
@@ -183,7 +177,7 @@ export default function Profile({ theme }) {
                   onClick={() => navigate(`/book/${story._id}`)}
                 >
                   <img
-                    src={`http://localhost:5000/uploads/${story.coverImage}`}
+                    src={`${API_URL}/uploads/${story.coverImage}`}
                     alt={story.title}
                     style={{
                       height: "250px",

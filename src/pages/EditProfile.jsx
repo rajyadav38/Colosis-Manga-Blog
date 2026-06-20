@@ -8,7 +8,7 @@ export default function EditProfile({ theme }) {
   const [avatarFile, setAvatarFile] = useState(null);
   const [username, setUsername] = useState(user?.username || "");
   const [bio, setBio] = useState("");
-
+  const API_URL = process.env.REACT_APP_API_URL;
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -22,7 +22,7 @@ export default function EditProfile({ theme }) {
         formData.append("avatar", avatarFile);
 
         const uploadRes = await fetch(
-          `http://localhost:5000/api/users/upload-avatar/${user.id}`,
+          `${API_URL}/api/users/upload-avatar/${user.id}`,
           {
             method: "POST",
             body: formData,
@@ -34,21 +34,18 @@ export default function EditProfile({ theme }) {
         avatarUrl = uploadData.avatar;
       }
 
-      const res = await fetch(
-        "http://localhost:5000/api/users/update-profile",
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id: user.id,
-            username,
-            bio,
-            avatar: avatarUrl,
-          }),
+      const res = await fetch(`${API_URL}/api/users/update-profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          id: user.id,
+          username,
+          bio,
+          avatar: avatarUrl,
+        }),
+      });
 
       const data = await res.json();
 

@@ -4,13 +4,13 @@ export default function Scrolls() {
   const [reels, setReels] = useState([]);
   const [commentInputs, setCommentInputs] = useState({});
   const videoRefs = useRef([]);
-
+  const API_URL = process.env.REACT_APP_API_URL;
   const currentUser = JSON.parse(localStorage.getItem("user"));
 
   // FETCH REELS
   const fetchReels = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/reels");
+      const res = await fetch(`${API_URL}/api/reels`);
 
       const data = await res.json();
 
@@ -57,20 +57,17 @@ export default function Scrolls() {
   // LIKE REEL
   const handleLike = async (reelId) => {
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/reels/like/${reelId}`,
-        {
-          method: "PUT",
+      const res = await fetch(`${API_URL}/api/reels/like/${reelId}`, {
+        method: "PUT",
 
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify({
-            userId: currentUser.id,
-          }),
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+
+        body: JSON.stringify({
+          userId: currentUser.id,
+        }),
+      });
 
       const data = await res.json();
 
@@ -91,7 +88,7 @@ export default function Scrolls() {
 
       if (!text) return;
 
-      await fetch(`http://localhost:5000/api/reels/comment/${reelId}`, {
+      await fetch(`${API_URL}/api/reels/comment/${reelId}`, {
         method: "PUT",
 
         headers: {

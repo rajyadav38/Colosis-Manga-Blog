@@ -8,7 +8,7 @@ export default function Chat({ theme }) {
   const [activeUser, setActiveUser] = useState(null);
   const [messages, setMessages] = useState({});
   const [input, setInput] = useState("");
-
+  const API_URL = process.env.REACT_APP_API_URL;
   const user = JSON.parse(localStorage.getItem("user"));
   const userId = Number(user?.id);
 
@@ -17,7 +17,7 @@ export default function Chat({ theme }) {
   // -------------------------------
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/users")
+    fetch(`${API_URL}/api/users`)
       .then((res) => res.json())
       .then((data) => {
         const filteredUsers = data.filter((u) => u.id !== userId);
@@ -44,7 +44,7 @@ export default function Chat({ theme }) {
   useEffect(() => {
     if (!userId) return;
 
-    socketRef.current = io("http://localhost:5000");
+    socketRef.current = io(`${API_URL}`);
 
     socketRef.current.emit("join", userId);
 
@@ -112,9 +112,7 @@ export default function Chat({ theme }) {
 
   const loadMessages = async (conversationId) => {
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/chat/messages/${conversationId}`,
-      );
+      const res = await fetch(`${API_URL}/api/chat/messages/${conversationId}`);
 
       const data = await res.json();
 
@@ -158,17 +156,14 @@ export default function Chat({ theme }) {
                 onClick={async () => {
                   setActiveUser(u);
 
-                  const res = await fetch(
-                    "http://localhost:5000/api/chat/conversation",
-                    {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        senderId: userId,
-                        receiverId: u.id,
-                      }),
-                    },
-                  );
+                  const res = await fetch(`${API_URL}/api/chat/conversation`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      senderId: userId,
+                      receiverId: u.id,
+                    }),
+                  });
 
                   const conversation = await res.json();
 

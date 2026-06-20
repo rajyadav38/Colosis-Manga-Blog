@@ -6,14 +6,14 @@ export default function StoryManager({ theme }) {
   const navigate = useNavigate();
   const [story, setStory] = useState(null);
   const [chapters, setChapters] = useState([]);
-
+  const API_URL = process.env.REACT_APP_API_URL;
   const [chapterTitle, setChapterTitle] = useState("");
   const [chapterContent, setChapterContent] = useState("");
 
   // LOAD STORY
   const fetchStory = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/stories/${id}`);
+      const res = await fetch(`${API_URL}/api/stories/${id}`);
 
       const data = await res.json();
 
@@ -26,7 +26,7 @@ export default function StoryManager({ theme }) {
   // LOAD CHAPTERS
   const fetchChapters = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/chapters/${id}`);
+      const res = await fetch(`${API_URL}/api/chapters/${id}`);
 
       const data = await res.json();
 
@@ -43,12 +43,9 @@ export default function StoryManager({ theme }) {
 
   const handleGenerateBook = async () => {
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/stories/generate-book/${id}`,
-        {
-          method: "POST",
-        },
-      );
+      const res = await fetch(`${API_URL}/api/stories/generate-book/${id}`, {
+        method: "POST",
+      });
 
       const data = await res.json();
 
@@ -62,12 +59,9 @@ export default function StoryManager({ theme }) {
 
   const handlePublish = async () => {
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/stories/publish/${id}`,
-        {
-          method: "PUT",
-        },
-      );
+      const res = await fetch(`${API_URL}/api/stories/publish/${id}`, {
+        method: "PUT",
+      });
 
       const data = await res.json();
 
@@ -87,7 +81,7 @@ export default function StoryManager({ theme }) {
         return;
       }
 
-      const res = await fetch("http://localhost:5000/api/chapters/create", {
+      const res = await fetch(`${API_URL}/api/chapters/create`, {
         method: "POST",
 
         headers: {

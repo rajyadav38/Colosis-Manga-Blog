@@ -5,7 +5,7 @@ export default function PublicProfile({ theme }) {
   const { username } = useParams();
 
   const currentUser = JSON.parse(localStorage.getItem("user"));
-
+  const API_URL = process.env.REACT_APP_API_URL;
   const [profile, setProfile] = useState(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followStats, setFollowStats] = useState({
@@ -15,20 +15,18 @@ export default function PublicProfile({ theme }) {
 
   // fetch public profile by username
   const fetchProfile = () => {
-    fetch(`http://localhost:5000/api/users/profile/${username}`)
+    fetch(`${API_URL}/api/users/profile/${username}`)
       .then((res) => res.json())
       .then((data) => {
         console.log("PUBLIC PROFILE:", data);
 
         setProfile(data);
 
-        fetch(
-          `http://localhost:5000/api/is-following/${currentUser.id}/${data.id}`,
-        )
+        fetch(`${API_URL}/api/is-following/${currentUser.id}/${data.id}`)
           .then((res) => res.json())
           .then((followData) => setIsFollowing(followData.isFollowing));
 
-        fetch(`http://localhost:5000/api/follow-stats/${data.id}`)
+        fetch(`${API_URL}/api/follow-stats/${data.id}`)
           .then((res) => res.json())
           .then((statsData) => setFollowStats(statsData));
       })
@@ -41,8 +39,8 @@ export default function PublicProfile({ theme }) {
 
   const handleFollowToggle = async () => {
     const url = isFollowing
-      ? "http://localhost:5000/api/unfollow"
-      : "http://localhost:5000/api/follow";
+      ? `${API_URL}/api/unfollow`
+      : `${API_URL}/api/follow`;
 
     const method = isFollowing ? "DELETE" : "POST";
 
@@ -65,7 +63,7 @@ export default function PublicProfile({ theme }) {
       setIsFollowing(!isFollowing);
 
       // refresh counts after follow/unfollow
-      fetch(`http://localhost:5000/api/follow-stats/${profile.id}`)
+      fetch(`${API_URL}/api/follow-stats/${profile.id}`)
         .then((res) => res.json())
         .then((statsData) => setFollowStats(statsData));
     } catch (error) {

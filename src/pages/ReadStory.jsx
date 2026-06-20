@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 
 export default function ReadStory({ theme }) {
   const { id } = useParams();
-
+  const API_URL = process.env.REACT_APP_API_URL;
   const [story, setStory] = useState(null);
   const [chapters, setChapters] = useState([]);
 
@@ -14,7 +14,7 @@ export default function ReadStory({ theme }) {
 
   const fetchStory = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/stories/${id}`);
+      const res = await fetch(`${API_URL}/api/stories/${id}`);
 
       const data = await res.json();
 
@@ -26,7 +26,7 @@ export default function ReadStory({ theme }) {
 
   const fetchChapters = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/chapters/${id}`);
+      const res = await fetch(`${API_URL}/api/chapters/${id}`);
 
       const data = await res.json();
 

@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom";
 
 export default function Home({ theme }) {
   const navigate = useNavigate();
-
+  const API_URL = process.env.REACT_APP_API_URL;
   const [stories, setStories] = useState([]);
 
   const user = JSON.parse(localStorage.getItem("user"));
   const fetchPublishedStories = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/stories/published");
+      const res = await fetch(`${API_URL}/api/stories/published`);
 
       const data = await res.json();
 
@@ -25,12 +25,9 @@ export default function Home({ theme }) {
 
   const handleLike = async (storyId) => {
     try {
-      await fetch(
-        `http://localhost:5000/api/stories/like/${storyId}/${user.id}`,
-        {
-          method: "PUT",
-        },
-      );
+      await fetch(`${API_URL}/api/stories/like/${storyId}/${user.id}`, {
+        method: "PUT",
+      });
 
       fetchPublishedStories();
     } catch (error) {
@@ -63,7 +60,7 @@ export default function Home({ theme }) {
               >
                 {/* Cover Image */}
                 <img
-                  src={`http://localhost:5000/uploads/${story.coverImage}`}
+                  src={`${API_URL}/uploads/${story.coverImage}`}
                   alt={story.title}
                   style={{
                     width: "100%",
