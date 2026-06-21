@@ -60,7 +60,7 @@ export default function Home({ theme }) {
               >
                 {/* Cover Image */}
                 <img
-                  src={`${API_URL}/uploads/${story.coverImage}`}
+                  src={story.coverImage}
                   alt={story.title}
                   style={{
                     width: "100%",

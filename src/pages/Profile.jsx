@@ -177,7 +177,7 @@ export default function Profile({ theme }) {
                   onClick={() => navigate(`/book/${story._id}`)}
                 >
                   <img
-                    src={`${API_URL}/uploads/${story.coverImage}`}
+                    src={story.coverImage}
                     alt={story.title}
                     style={{
                       height: "250px",

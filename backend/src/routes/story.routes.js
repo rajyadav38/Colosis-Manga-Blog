@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
-
+const cloudinary = require("../config/cloudinary");
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
@@ -19,8 +19,19 @@ const model = require("../config/gemini");
 const Chapter = require("../models/Chapter");
 
 // CREATE STORY
+
 router.post("/create", upload.single("coverImage"), async (req, res) => {
   try {
+    let coverImageUrl = "";
+
+    if (req.file) {
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "colosis/story-covers",
+      });
+
+      coverImageUrl = result.secure_url;
+    }
+
     const story = await Story.create({
       authorId: req.body.authorId,
       authorUsername: req.body.authorUsername,
@@ -32,7 +43,7 @@ router.post("/create", upload.single("coverImage"), async (req, res) => {
 
       genres: req.body.genres ? req.body.genres.split(",") : [],
 
-      coverImage: req.file ? req.file.filename : "",
+      coverImage: coverImageUrl,
     });
 
     res.status(201).json(story);
