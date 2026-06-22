@@ -15,10 +15,6 @@ export default function Navbar({
   const navigate = useNavigate();
   const API_URL = process.env.REACT_APP_API_URL;
 
-  // -------------------------------
-  // Live Search Suggestions
-  // -------------------------------
-
   useEffect(() => {
     if (!searchQuery.trim()) {
       setResults([]);
@@ -33,7 +29,14 @@ export default function Navbar({
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, API_URL]);
+
+  const logout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    setUser(null);
+    navigate("/login");
+  };
 
   return (
     <nav
@@ -100,23 +103,10 @@ export default function Navbar({
           >
             Chat
           </Link>
-
-          <Link
-            className="nav-link"
-            to="/profile"
-            style={{
-              color: theme.text,
-              fontFamily: "'Kaushan Script', cursive",
-              fontSize: "20px",
-            }}
-          >
-            Profile
-          </Link>
         </ul>
       </div>
 
-      {/* 🔍 SEARCH BAR + LIVE RESULTS */}
-
+      {/* SEARCH */}
       <div style={{ position: "relative", width: "240px" }}>
         <input
           type="text"
@@ -132,11 +122,8 @@ export default function Navbar({
             background: theme.bg,
             color: theme.text,
             border: `1px solid ${theme.accent}`,
-            outline: "none",
           }}
         />
-
-        {/* Suggestions Dropdown */}
 
         {results.length > 0 && (
           <div
@@ -148,7 +135,6 @@ export default function Navbar({
               width: "100%",
               background: theme.card,
               zIndex: 1000,
-              borderRadius: "10px",
               overflow: "hidden",
             }}
           >
@@ -189,22 +175,57 @@ export default function Navbar({
         </button>
 
         {user ? (
-          <button
-            className="btn btn-sm ms-2"
-            style={{ background: "#444", color: "white" }}
-            onClick={() => {
-              localStorage.removeItem("user");
-              setUser(null);
-              window.location.href = "/login";
-            }}
-          >
-            Logout
-          </button>
+          <div className="dropdown">
+            <button
+              className="btn btn-sm dropdown-toggle"
+              data-bs-toggle="dropdown"
+              style={{
+                background: "#444",
+                color: "white",
+                border: "none",
+              }}
+            >
+              👤 {user.username}
+            </button>
+
+            <ul className="dropdown-menu dropdown-menu-end">
+              <li>
+                <Link className="dropdown-item" to="/profile">
+                  👤 Profile
+                </Link>
+              </li>
+
+              <li>
+                <Link className="dropdown-item" to="/dashboard">
+                  📊 Creator Dashboard
+                </Link>
+              </li>
+
+              <li>
+                <Link className="dropdown-item" to="/edit-profile">
+                  ✏️ Edit Profile
+                </Link>
+              </li>
+
+              <li>
+                <hr className="dropdown-divider" />
+              </li>
+
+              <li>
+                <button className="dropdown-item text-danger" onClick={logout}>
+                  🚪 Logout
+                </button>
+              </li>
+            </ul>
+          </div>
         ) : (
           <Link
             to="/login"
-            className="btn btn-sm ms-2"
-            style={{ background: theme.accent, color: "white" }}
+            className="btn btn-sm"
+            style={{
+              background: theme.accent,
+              color: "white",
+            }}
           >
             Login
           </Link>
