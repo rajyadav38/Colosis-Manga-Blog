@@ -21,6 +21,7 @@ import StoryManager from "./pages/StoryManager";
 import CreatorDashboard from "./pages/CreatorDashboard";
 import ReadStory from "./pages/ReadStory";
 import BookReader from "./pages/BookReader";
+import Analytics from "./pages/Analytics";
 export default function MangaBlogApp() {
   const [darkMode, setDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,6 +91,10 @@ export default function MangaBlogApp() {
                     <Route
                       path="/dashboard"
                       element={<CreatorDashboard theme={theme} />}
+                    />
+                    <Route
+                      path="/analytics"
+                      element={<Analytics theme={theme} />}
                     />
                   </Routes>
                 </>

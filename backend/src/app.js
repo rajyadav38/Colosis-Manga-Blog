@@ -13,6 +13,7 @@ const reelRoutes = require("./routes/reel.routes");
 const storyRoutes = require("./routes/story.routes");
 const chapterRoutes = require("./routes/chapter.routes");
 const avatarRoutes = require("./routes/avatar.routes");
+const reviewRoutes = require("./routes/review.routes");
 /* 🔴 BODY PARSER — THIS FIXES YOUR ERROR */
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -24,6 +25,7 @@ app.use(express.json());
 /* Routes */
 app.use("/api/reels", reelRoutes);
 app.use("/api/stories", storyRoutes);
+app.use("/api/reviews", reviewRoutes);
 app.use("/api/chapters", chapterRoutes);
 app.use("/api/users", searchUsersRoutes);
 app.use("/api/users", publicProfileRoutes);
