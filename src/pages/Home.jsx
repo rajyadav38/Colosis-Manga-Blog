@@ -102,7 +102,13 @@ export default function Home({ theme }) {
                         background: theme.accent,
                         color: "white",
                       }}
-                      onClick={() => navigate(`/book/${story._id}`)}
+                      onClick={() => {
+                        if (story.type === "novel") {
+                          navigate(`/book/${story._id}`);
+                        } else {
+                          navigate(`/manga/${story._id}`);
+                        }
+                      }}
                     >
                       📖 Read Book
                     </button>

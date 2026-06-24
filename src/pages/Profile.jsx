@@ -174,7 +174,13 @@ export default function Profile({ theme }) {
                     overflow: "hidden",
                     cursor: "pointer",
                   }}
-                  onClick={() => navigate(`/book/${story._id}`)}
+                  onClick={() => {
+                    if (story.type === "novel") {
+                      navigate(`/book/${story._id}`);
+                    } else {
+                      navigate(`/manga/${story._id}`);
+                    }
+                  }}
                 >
                   <img
                     src={story.coverImage}

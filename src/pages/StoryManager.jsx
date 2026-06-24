@@ -264,7 +264,13 @@ export default function StoryManager({ theme }) {
                 background: theme.accent,
                 color: "white",
               }}
-              onClick={() => navigate(`/book/${id}`)}
+              onClick={() => {
+                if (story.type === "novel") {
+                  navigate(`/book/${id}`);
+                } else {
+                  navigate(`/manga/${id}`);
+                }
+              }}
             >
               📖 Read Story
             </button>
