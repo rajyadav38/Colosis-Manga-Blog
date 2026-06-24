@@ -8,12 +8,22 @@ const chapterSchema = new mongoose.Schema(
 
     title: String,
 
-    content: String,
+    // For novels
+    content: {
+      type: String,
+      default: "",
+    },
 
+    // For manga/comics
     pages: [
       {
-        image: String,
-        text: String,
+        imageUrl: String,
+        caption: {
+          type: String,
+          default: "",
+        },
+
+        pageNumber: Number,
       },
     ],
   },
