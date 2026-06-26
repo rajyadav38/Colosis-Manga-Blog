@@ -158,7 +158,15 @@ ${page.description}
     }
 
     chapter.pages = pages;
-    await chapter.save();
+    await Chapter.findByIdAndUpdate(
+      chapter._id,
+      {
+        pages,
+      },
+      {
+        new: true,
+      },
+    );
 
     res.json({
       message: "Pages generated successfully",
