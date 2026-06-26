@@ -121,7 +121,10 @@ ${page.description}
       }
 
       try {
+        console.log("Generating image for page:");
+        console.log(imagePrompt);
         const imageBuffer = await generateImage(imagePrompt);
+        console.log("Image generated.");
 
         const uploadResult = await new Promise((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream(

@@ -2,6 +2,7 @@ const axios = require("axios");
 
 const generateImage = async (prompt) => {
   try {
+    console.log("Calling HuggingFace...");
     const response = await axios({
       url: "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-dev",
       method: "POST",
@@ -14,6 +15,7 @@ const generateImage = async (prompt) => {
       },
       responseType: "arraybuffer",
     });
+    console.log("Response received.");
 
     return Buffer.from(response.data);
   } catch (error) {
