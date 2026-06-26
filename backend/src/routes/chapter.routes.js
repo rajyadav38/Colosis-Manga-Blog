@@ -21,6 +21,7 @@ router.post("/create", async (req, res) => {
 });
 
 router.post("/generate-pages/:id", async (req, res) => {
+  console.log("🔥 GENERATE ROUTE HIT");
   try {
     const chapter = await Chapter.findById(req.params.id);
 
