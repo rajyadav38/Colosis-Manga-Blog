@@ -104,13 +104,8 @@ export default function StoryManager({ theme }) {
         return;
       }
 
-      if (story.type === "novel" && !chapterContent) {
+      if (!chapterContent.trim()) {
         alert("Please write chapter content");
-        return;
-      }
-
-      if (story.type !== "novel" && pages.length === 0) {
-        alert("Please add at least one page");
         return;
       }
 
@@ -123,9 +118,7 @@ export default function StoryManager({ theme }) {
           },
           body: JSON.stringify({
             title: chapterTitle,
-            content: story.type === "novel" ? chapterContent : "",
-
-            pages: story.type !== "novel" ? pages : [],
+            content: chapterContent,
           }),
         });
 
@@ -152,8 +145,8 @@ export default function StoryManager({ theme }) {
           storyId: id,
           chapterNumber: chapters.length + 1,
           title: chapterTitle,
-          content: story.type === "novel" ? chapterContent : "",
-          pages: story.type !== "novel" ? pages : [],
+          content: chapterContent,
+          pages: [],
         }),
       });
 
@@ -182,44 +175,6 @@ export default function StoryManager({ theme }) {
       });
 
       fetchChapters();
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  const addPage = () => {
-    setPages([
-      ...pages,
-      {
-        imageUrl: "",
-        caption: "",
-        pageNumber: pages.length + 1,
-      },
-    ]);
-  };
-
-  const updatePage = (index, field, value) => {
-    const updatedPages = [...pages];
-
-    updatedPages[index][field] = value;
-
-    setPages(updatedPages);
-  };
-
-  const uploadPageImage = async (file, index) => {
-    try {
-      const formData = new FormData();
-
-      formData.append("image", file);
-
-      const res = await fetch(`${API_URL}/api/stories/upload-page`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-
-      updatePage(index, "imageUrl", data.imageUrl);
     } catch (error) {
       console.log(error);
     }
@@ -372,59 +327,23 @@ export default function StoryManager({ theme }) {
             onChange={(e) => setChapterTitle(e.target.value)}
           />
 
-          {story.type === "novel" ? (
-            <textarea
-              className="form-control mb-3"
-              rows="10"
-              placeholder="Write your chapter..."
-              value={chapterContent}
-              onChange={(e) => setChapterContent(e.target.value)}
-            />
-          ) : (
-            <>
-              <button className="btn btn-success mb-3" onClick={addPage}>
-                ➕ Add Page
-              </button>
+          <textarea
+            className="form-control mb-3"
+            rows="12"
+            placeholder={
+              story.type === "novel"
+                ? "Write your chapter..."
+                : `Write your ${story.type} chapter...
 
-              {pages.map((page, index) => (
-                <div key={index} className="card p-3 mb-3 shadow-sm">
-                  <h5>📄 Page {index + 1}</h5>
+Example:
 
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="form-control mb-2"
-                    onChange={(e) => uploadPageImage(e.target.files[0], index)}
-                  />
-
-                  {page.imageUrl && (
-                    <img
-                      src={page.imageUrl}
-                      alt="Preview"
-                      style={{
-                        width: "100%",
-                        maxHeight: "300px",
-                        objectFit: "contain",
-                        borderRadius: "10px",
-                        marginTop: "10px",
-                      }}
-                    />
-                  )}
-
-                  {story.type === "comic" && (
-                    <textarea
-                      className="form-control"
-                      placeholder="Caption"
-                      value={page.caption}
-                      onChange={(e) =>
-                        updatePage(index, "caption", e.target.value)
-                      }
-                    />
-                  )}
-                </div>
-              ))}
-            </>
-          )}
+Arjun enters the cave and sees a sleeping dragon.
+The dragon slowly opens its eyes.
+The cave starts shaking...`
+            }
+            value={chapterContent}
+            onChange={(e) => setChapterContent(e.target.value)}
+          />
 
           <button
             className="btn mb-4"
@@ -434,11 +353,7 @@ export default function StoryManager({ theme }) {
             }}
             onClick={handleAddChapter}
           >
-            {editingChapter
-              ? "💾 Update Chapter"
-              : story.type === "novel"
-                ? "➕ Add Chapter"
-                : "📚 Save Chapter"}
+            {editingChapter ? "💾 Update Chapter" : "➕ Save Chapter"}
           </button>
 
           <hr />
@@ -455,14 +370,20 @@ export default function StoryManager({ theme }) {
                     Chapter {chapter.chapterNumber}: {chapter.title}
                   </h5>
 
-                  {story.type === "novel" ? (
-                    <p>
-                      {chapter.content?.substring(0, 150)}
-                      ...
-                    </p>
-                  ) : (
+                  <p
+                    style={{
+                      whiteSpace: "pre-wrap",
+                    }}
+                  >
+                    {chapter.content?.substring(0, 250)}
+                    {chapter.content?.length > 250 && "..."}
+                  </p>
+
+                  {(story.type === "manga" || story.type === "comic") && (
                     <>
-                      <p>📄 {chapter.pages?.length || 0} Pages</p>
+                      <p className="mt-3">
+                        📄 Generated Pages: {chapter.pages?.length || 0}
+                      </p>
 
                       {chapter.pages?.length > 0 && (
                         <div className="mt-2">
@@ -484,12 +405,8 @@ export default function StoryManager({ theme }) {
                       className="btn btn-primary btn-sm"
                       onClick={() => {
                         setEditingChapter(chapter);
-
                         setChapterTitle(chapter.title);
-
                         setChapterContent(chapter.content || "");
-
-                        setPages(chapter.pages || []);
 
                         window.scrollTo({
                           top: 0,

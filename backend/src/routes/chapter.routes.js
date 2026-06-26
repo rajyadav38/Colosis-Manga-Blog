@@ -3,7 +3,9 @@ const router = express.Router();
 const Story = require("../models/Story");
 const model = require("../config/gemini");
 const Chapter = require("../models/Chapter");
-
+const generateImage = require("../services/flux.service");
+const cloudinary = require("../config/cloudinary");
+const streamifier = require("streamifier");
 router.post("/create", async (req, res) => {
   try {
     const chapter = await Chapter.create(req.body);
@@ -96,12 +98,62 @@ Rules:
 
     const generated = JSON.parse(text);
 
-    chapter.pages = generated.pages.map((page) => ({
-      pageNumber: page.pageNumber,
-      caption: page.description,
-      imageUrl: "",
-    }));
+    const pages = [];
 
+    for (const page of generated.pages) {
+      let imagePrompt = "";
+
+      if (story.type === "manga") {
+        imagePrompt = `
+Black and white manga page.
+Professional manga artwork.
+Detailed ink drawing.
+Japanese manga style.
+${page.description}
+`;
+      } else {
+        imagePrompt = `
+Colored western comic page.
+Professional comic book illustration.
+Cinematic composition.
+${page.description}
+`;
+      }
+
+      try {
+        const imageBuffer = await generateImage(imagePrompt);
+
+        const uploadResult = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder: "colosis/generated-pages",
+            },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            },
+          );
+
+          streamifier.createReadStream(imageBuffer).pipe(stream);
+        });
+
+        pages.push({
+          pageNumber: page.pageNumber,
+          caption: page.description,
+          imageUrl: uploadResult.secure_url,
+        });
+      } catch (error) {
+        console.log(`Failed Page ${page.pageNumber}`, error);
+
+        pages.push({
+          pageNumber: page.pageNumber,
+          caption: page.description,
+          imageUrl: "",
+        });
+      }
+    }
+
+    chapter.pages = pages;
     await chapter.save();
 
     res.json({
