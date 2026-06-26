@@ -327,40 +327,53 @@ export default function MangaReader() {
 
             {chapter.pages?.map((page, index) => (
               <div key={index} className="mb-4">
-                <img
-                  src={page.imageUrl}
-                  alt=""
-                  style={{
-                    width: "100%",
-                    maxWidth: "700px",
-                    display: "block",
-                    margin: "0 auto",
-                    borderRadius: "14px",
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.4)",
-                  }}
-                />
-
-                <div
-                  className="text-center mt-2"
-                  style={{
-                    color: "#999",
-                    fontSize: "14px",
-                  }}
-                >
-                  Page {page.pageNumber}
-                </div>
+                {page.imageUrl ? (
+                  <img
+                    src={page.imageUrl}
+                    alt=""
+                    style={{
+                      width: "100%",
+                      maxWidth: "700px",
+                      display: "block",
+                      margin: "0 auto",
+                      borderRadius: "14px",
+                      boxShadow: "0 10px 25px rgba(0,0,0,0.4)",
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      maxWidth: "700px",
+                      margin: "0 auto",
+                      background: "#1b223d",
+                      padding: "40px",
+                      borderRadius: "15px",
+                      textAlign: "center",
+                      color: "#fff",
+                      fontSize: "22px",
+                    }}
+                  >
+                    📖 AI Generated Page {page.pageNumber}
+                  </div>
+                )}
 
                 {page.caption && (
                   <div
-                    className="text-center mt-3"
+                    className="mt-3"
                     style={{
+                      background: "#151b30",
+                      padding: "20px",
+                      borderRadius: "15px",
                       color: "#ddd",
                       maxWidth: "700px",
-                      margin: "0 auto",
+                      margin: "20px auto",
                       lineHeight: "1.8",
+                      fontSize: "18px",
                     }}
                   >
-                    {page.caption}
+                    <strong>Page {page.pageNumber} Description:</strong>
+
+                    <p className="mt-2 mb-0">{page.caption}</p>
                   </div>
                 )}
               </div>

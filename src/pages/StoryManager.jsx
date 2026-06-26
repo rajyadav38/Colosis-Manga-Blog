@@ -60,6 +60,26 @@ export default function StoryManager({ theme }) {
     }
   };
 
+  const handleGeneratePages = async (chapterId) => {
+    try {
+      const res = await fetch(
+        `${API_URL}/api/chapters/generate-pages/${chapterId}`,
+        {
+          method: "POST",
+        },
+      );
+
+      const data = await res.json();
+
+      alert(data.message);
+
+      fetchChapters();
+    } catch (error) {
+      console.log(error);
+      alert("Failed to generate pages");
+    }
+  };
+
   const handlePublish = async () => {
     try {
       const res = await fetch(`${API_URL}/api/stories/publish/${id}`, {
@@ -267,7 +287,9 @@ export default function StoryManager({ theme }) {
               onClick={() => {
                 if (story.type === "novel") {
                   navigate(`/book/${id}`);
-                } else {
+                }
+
+                if (story.type === "manga" || story.type === "comic") {
                   navigate(`/manga/${id}`);
                 }
               }}
@@ -439,10 +461,25 @@ export default function StoryManager({ theme }) {
                       ...
                     </p>
                   ) : (
-                    <p>📄 {chapter.pages?.length || 0} Pages</p>
+                    <>
+                      <p>📄 {chapter.pages?.length || 0} Pages</p>
+
+                      {chapter.pages?.length > 0 && (
+                        <div className="mt-2">
+                          {chapter.pages.map((page) => (
+                            <div
+                              key={page.pageNumber}
+                              className="small text-muted"
+                            >
+                              Page {page.pageNumber}: {page.caption}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
 
-                  <div className="d-flex gap-2">
+                  <div className="d-flex gap-2 flex-wrap">
                     <button
                       className="btn btn-primary btn-sm"
                       onClick={() => {
@@ -462,6 +499,15 @@ export default function StoryManager({ theme }) {
                     >
                       ✏️ Edit
                     </button>
+
+                    {(story.type === "manga" || story.type === "comic") && (
+                      <button
+                        className="btn btn-warning btn-sm"
+                        onClick={() => handleGeneratePages(chapter._id)}
+                      >
+                        🤖 Generate Pages
+                      </button>
+                    )}
 
                     <button
                       className="btn btn-danger btn-sm"
