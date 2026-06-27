@@ -1,26 +1,27 @@
-const axios = require("axios");
+const Replicate = require("replicate");
+
+const replicate = new Replicate({
+  auth: process.env.REPLICATE_API_TOKEN,
+});
 
 const generateImage = async (prompt) => {
   try {
-    console.log("Calling HuggingFace...");
+    console.log("Generating image with Replicate...");
 
-    const response = await axios({
-      url: "https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0",
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.HUGGINGFACE_API_KEY}`,
-        "Content-Type": "application/json",
+    const output = await replicate.run("black-forest-labs/flux-schnell", {
+      input: {
+        prompt,
+        aspect_ratio: "2:3",
+        output_format: "jpg",
+        num_outputs: 1,
       },
-      data: {
-        inputs: prompt,
-      },
-      responseType: "arraybuffer",
     });
 
-    return Buffer.from(response.data);
-  } catch (error) {
-    console.log("HF Error:", error.response?.data?.toString() || error.message);
+    console.log("Replicate Output:", output);
 
+    return output[0];
+  } catch (error) {
+    console.log("Replicate Error:", error);
     throw error;
   }
 };

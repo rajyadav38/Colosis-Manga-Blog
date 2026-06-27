@@ -5,6 +5,7 @@ const model = require("../config/gemini");
 const Chapter = require("../models/Chapter");
 const generateImage = require("../services/flux.service");
 const cloudinary = require("../config/cloudinary");
+const axios = require("axios");
 const streamifier = require("streamifier");
 router.post("/create", async (req, res) => {
   try {
@@ -122,10 +123,13 @@ ${page.description}
       }
 
       try {
-        console.log("Generating image for page:");
-        console.log(imagePrompt);
-        const imageBuffer = await generateImage(imagePrompt);
-        console.log("Image generated.");
+        const replicateImageUrl = await generateImage(imagePrompt);
+
+        const response = await axios.get(replicateImageUrl, {
+          responseType: "arraybuffer",
+        });
+
+        const imageBuffer = Buffer.from(response.data);
 
         const uploadResult = await new Promise((resolve, reject) => {
           const stream = cloudinary.uploader.upload_stream(
