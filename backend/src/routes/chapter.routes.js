@@ -102,7 +102,9 @@ Rules:
 
     const pages = [];
 
-    for (const page of generated.pages) {
+    const pagesToGenerate = generated.pages.slice(0, 2);
+
+    for (const page of pagesToGenerate) {
       let imagePrompt = "";
 
       if (story.type === "manga") {
