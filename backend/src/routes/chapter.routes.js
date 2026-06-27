@@ -123,37 +123,19 @@ Cinematic composition.
 ${page.description}
 `;
       }
-
       try {
-        const replicateImageUrl = await generateImage(imagePrompt);
+        const imageUrl = await generateImage(imagePrompt);
 
-        const response = await axios.get(replicateImageUrl, {
-          responseType: "arraybuffer",
-        });
-
-        const imageBuffer = Buffer.from(response.data);
-
-        const uploadResult = await new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            {
-              folder: "colosis/generated-pages",
-            },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            },
-          );
-
-          streamifier.createReadStream(imageBuffer).pipe(stream);
-        });
+        console.log("GENERATED IMAGE URL:");
+        console.log(imageUrl);
 
         pages.push({
           pageNumber: page.pageNumber,
           caption: page.description,
-          imageUrl: uploadResult.secure_url,
+          imageUrl,
         });
       } catch (error) {
-        console.log(`Failed Page ${page.pageNumber}`, error);
+        console.log("PAGE ERROR:", error);
 
         pages.push({
           pageNumber: page.pageNumber,

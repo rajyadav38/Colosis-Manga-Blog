@@ -17,9 +17,22 @@ const generateImage = async (prompt) => {
       },
     });
 
+    console.log("Replicate Output:");
+    console.log(output);
+    console.log("Type:", typeof output);
+
+    if (Array.isArray(output)) {
+      console.log("First item:", output[0]);
+      console.log("First item type:", typeof output[0]);
+    }
+
     console.log("Replicate Output:", output);
 
-    return output[0];
+    if (Array.isArray(output)) {
+      return output[0].toString();
+    }
+
+    return output.toString();
   } catch (error) {
     console.log("Replicate Error:", error);
     throw error;
