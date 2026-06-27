@@ -102,7 +102,7 @@ Rules:
 
     const pages = [];
 
-    const pagesToGenerate = generated.pages.slice(0, 2);
+    const pagesToGenerate = generated.pages.slice(0, 1);
 
     for (const page of pagesToGenerate) {
       let imagePrompt = "";
