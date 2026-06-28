@@ -1,15 +1,61 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { auth } from "../firebase";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import "./Auth.css";
+import logo from "../assets/colosis-logo.png";
 
-export default function Signup({ theme }) {
-  // 🔴 STATE DEFINITIONS (THIS FIXES YOUR ERROR)
+export default function Signup() {
+  const navigate = useNavigate();
+
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
   const API_URL = process.env.REACT_APP_API_URL;
+
+  const handleGoogleSignup = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+
+      const result = await signInWithPopup(auth, provider);
+
+      const user = result.user;
+
+      const res = await fetch(`${API_URL}/api/auth/google`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firebaseUid: user.uid,
+          username: user.displayName,
+          email: user.email,
+          avatar: user.photoURL,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message);
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("isLoggedIn", "true");
+
+      navigate("/");
+    } catch (error) {
+      console.log(error);
+      alert("Google signup failed.");
+    }
+  };
+
   const signup = async () => {
     if (!username || !email || !password) {
-      alert("❌ Please fill all fields");
+      alert("Please fill all fields.");
       return;
     }
 
@@ -19,7 +65,11 @@ export default function Signup({ theme }) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, email, password }),
+        body: JSON.stringify({
+          username,
+          email,
+          password,
+        }),
       });
 
       const data = await res.json();
@@ -29,52 +79,56 @@ export default function Signup({ theme }) {
         return;
       }
 
-      alert("✅ Signup successful! Please login");
+      alert("Account created successfully!");
+      navigate("/login");
     } catch (err) {
-      console.error(err);
-      alert("❌ Server error");
+      console.log(err);
+      alert("Server Error");
     }
   };
 
   return (
-    <div
-      className="container py-5 auth-page"
-      style={{ color: theme.text, maxWidth: 420 }}
-    >
-      <h2 className="fw-bold mb-4 text-center">📝 Sign Up</h2>
+    <div className="auth-page">
+      <div className="auth-card">
+        <div className="auth-logo">
+          <img src={logo} alt="Colosis" className="auth-logo-img" />
+        </div>
 
-      <div
-        className="p-4 shadow rounded anime-card glow"
-        style={{ background: theme.card }}
-      >
+        <h2 className="auth-title">Create Your Account</h2>
+
         <input
-          className="form-control mb-3"
+          className="form-control auth-input"
           placeholder="Username"
+          value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
 
         <input
-          className="form-control mb-3"
-          placeholder="Gmail ID"
+          type="email"
+          className="form-control auth-input"
+          placeholder="Email"
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
 
         <input
           type="password"
-          className="form-control mb-3"
+          className="form-control auth-input"
           placeholder="Password"
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button
-          className="btn w-100 glow"
-          style={{ background: theme.accent, color: "white" }}
-          onClick={signup}
-        >
+        <button className="auth-btn" onClick={signup}>
           Create Account
         </button>
 
-        <p className="text-center mt-3">
+        <button className="google-btn" onClick={handleGoogleSignup}>
+          <i className="bi bi-google me-2"></i>
+          Continue with Google
+        </button>
+
+        <p className="auth-link">
           Already have an account? <Link to="/login">Login</Link>
         </p>
       </div>

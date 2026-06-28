@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import Logo from "../Logo.png";
+import logo from "../assets/colosis-logo.png";
 
 export default function Navbar({
   theme,
@@ -48,7 +48,7 @@ export default function Navbar({
         className="navbar-brand d-flex align-items-center nav-logo"
         style={{ padding: "4px 0" }}
       >
-        <img src={Logo} alt="Colosis" className="navbar-logo" />
+        <img src={logo} alt="Colosis" className="navbar-logo" />
       </Link>
 
       <div

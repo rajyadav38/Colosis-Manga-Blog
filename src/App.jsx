@@ -28,9 +28,20 @@ export default function MangaBlogApp() {
   const [searchQuery, setSearchQuery] = useState("");
   const theme = darkMode ? darkTheme : lightTheme;
 
-  const [user, setUser] = useState(
-    JSON.parse(localStorage.getItem("user")) || null,
-  );
+  const [user, setUser] = useState(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+
+      if (!storedUser || storedUser === "undefined") {
+        return null;
+      }
+
+      return JSON.parse(storedUser);
+    } catch (error) {
+      console.log("Invalid user in localStorage");
+      return null;
+    }
+  });
 
   return (
     <div

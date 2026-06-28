@@ -65,6 +65,13 @@ exports.login = async (req, res) => {
     const user = rows[0];
     const match = await bcrypt.compare(password, user.password);
 
+    if (!user.password) {
+      return res.status(400).json({
+        message:
+          "This account uses Google Sign In. Please continue with Google.",
+      });
+    }
+
     if (!match) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
