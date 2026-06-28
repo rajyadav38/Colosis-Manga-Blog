@@ -1,12 +1,49 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 
+import { auth } from "../firebase";
 export default function Login({ theme, setUser }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
   const API_URL = process.env.REACT_APP_API_URL;
+
+  const handleGoogleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+
+      const result = await signInWithPopup(auth, provider);
+
+      const user = result.user;
+
+      const res = await fetch(`${API_URL}/api/auth/google`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          firebaseUid: user.uid,
+          username: user.displayName,
+          email: user.email,
+          avatar: user.photoURL,
+        }),
+      });
+
+      const data = await res.json();
+
+      localStorage.setItem("token", data.token);
+
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      localStorage.setItem("isLoggedIn", "true");
+
+      navigate("/");
+    } catch (error) {
+      console.log(error);
+    }
+  };
   const login = async () => {
     if (!username || !password) {
       alert("❌ Please fill all fields");
@@ -69,6 +106,13 @@ export default function Login({ theme, setUser }) {
           onClick={login}
         >
           Login
+        </button>
+
+        <button
+          className="btn btn-light w-100 mt-3"
+          onClick={handleGoogleLogin}
+        >
+          Continue with Google
         </button>
 
         <p className="text-center mt-3">
