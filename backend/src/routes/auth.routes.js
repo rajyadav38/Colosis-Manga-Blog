@@ -95,48 +95,31 @@ router.post("/send-reset-otp", async (req, res) => {
   try {
     const { email } = req.body;
 
-    const [users] = await pool.query(
-      `
-          SELECT *
-          FROM users
-          WHERE email = ?
-          `,
-      [email],
-    );
-
-    if (users.length === 0) {
-      return res.status(404).json({
-        message: "No account found with this email",
-      });
-    }
-
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    await pool.query(
+    await db.query(
       `
-        INSERT INTO password_otps
-        (
-          email,
-          otp,
-          expires_at
-        )
-        VALUES (?, ?, ?)
-        `,
+      INSERT INTO password_resets
+      (email, otp, expires_at)
+      VALUES (?, ?, ?)
+      `,
       [email, otp, expiresAt],
     );
 
     await sendOtpEmail(email, otp);
 
-    res.json({
+    return res.json({
+      success: true,
       message: "OTP sent successfully",
     });
   } catch (error) {
     console.log(error);
 
-    res.status(500).json({
-      message: "Server Error",
+    return res.status(500).json({
+      success: false,
+      message: "Failed to send OTP",
     });
   }
 });

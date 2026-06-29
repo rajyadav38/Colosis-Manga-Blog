@@ -9,10 +9,6 @@ export default function ForgotPassword() {
   const API_URL = process.env.REACT_APP_API_URL;
 
   const sendOtp = async () => {
-    if (!email) {
-      return alert("Please enter your email.");
-    }
-
     try {
       const res = await fetch(`${API_URL}/api/auth/send-reset-otp`, {
         method: "POST",
@@ -27,17 +23,16 @@ export default function ForgotPassword() {
       const data = await res.json();
 
       if (!res.ok) {
-        return alert(data.message);
+        alert(data.message);
+        return;
       }
 
       localStorage.setItem("resetEmail", email);
 
-      alert("OTP sent to your email.");
-
       navigate("/verify-otp");
     } catch (error) {
       console.log(error);
-      alert("Server Error");
+      alert("Failed to send OTP");
     }
   };
 
