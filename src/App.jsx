@@ -59,6 +59,12 @@ export default function MangaBlogApp() {
           />
           <Route path="/signup" element={<Signup theme={theme} />} />
 
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+
+          <Route path="/verify-otp" element={<VerifyOtp />} />
+
+          <Route path="/reset-password" element={<ResetPassword />} />
+
           <Route
             path="/*"
             element={
@@ -112,14 +118,6 @@ export default function MangaBlogApp() {
                       element={<Analytics theme={theme} />}
                     />
                     <Route path="/manga/:id" element={<MangaReader />} />
-                    <Route
-                      path="/forgot-password"
-                      element={<ForgotPassword />}
-                    />
-
-                    <Route path="/verify-otp" element={<VerifyOtp />} />
-
-                    <Route path="/reset-password" element={<ResetPassword />} />
                   </Routes>
                 </>
               </ProtectedRoute>
