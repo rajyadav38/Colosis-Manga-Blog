@@ -5,7 +5,7 @@ const bcrypt = require("bcryptjs");
 const sendOtpEmail = require("../services/email.service");
 const pool = require("../config/db");
 const authController = require("../controllers/auth.controller");
-
+const db = require("../config/db");
 router.post("/google", async (req, res) => {
   try {
     const { firebaseUid, username, email, avatar } = req.body;
