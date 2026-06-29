@@ -128,6 +128,10 @@ export default function Login({ setUser }) {
             }}
             onClick={() => setShowPassword(!showPassword)}
           />
+
+          <p className="text-end mb-3" style={{ fontSize: "14px" }}>
+            <Link to="/forgot-password">Forgot Password?</Link>
+          </p>
         </div>
 
         <button className="auth-btn" onClick={login}>

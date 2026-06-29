@@ -23,6 +23,9 @@ import ReadStory from "./pages/ReadStory";
 import BookReader from "./pages/BookReader";
 import Analytics from "./pages/Analytics";
 import MangaReader from "./pages/MangaReader";
+import ForgotPassword from "./pages/ForgotPassword";
+import VerifyOtp from "./pages/VerifyOtp";
+import ResetPassword from "./pages/ResetPassword";
 export default function MangaBlogApp() {
   const [darkMode, setDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -109,6 +112,14 @@ export default function MangaBlogApp() {
                       element={<Analytics theme={theme} />}
                     />
                     <Route path="/manga/:id" element={<MangaReader />} />
+                    <Route
+                      path="/forgot-password"
+                      element={<ForgotPassword />}
+                    />
+
+                    <Route path="/verify-otp" element={<VerifyOtp />} />
+
+                    <Route path="/reset-password" element={<ResetPassword />} />
                   </Routes>
                 </>
               </ProtectedRoute>
