@@ -130,7 +130,9 @@ export default function Login({ setUser }) {
           />
 
           <p className="text-end mb-3" style={{ fontSize: "14px" }}>
-            <Link to="/forgot-password">Forgot Password?</Link>
+            <Link to="/forgot-password" className="forgot-link">
+              Forgot Password?
+            </Link>
           </p>
         </div>
 
