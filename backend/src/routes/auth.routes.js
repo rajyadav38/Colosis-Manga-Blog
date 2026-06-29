@@ -101,10 +101,10 @@ router.post("/send-reset-otp", async (req, res) => {
 
     await db.query(
       `
-      INSERT INTO password_resets
-      (email, otp, expires_at)
-      VALUES (?, ?, ?)
-      `,
+  INSERT INTO password_otps
+  (email, otp, expires_at)
+  VALUES (?, ?, ?)
+  `,
       [email, otp, expiresAt],
     );
 
