@@ -39,9 +39,6 @@ export default function Signup() {
 
       if (!res.ok) {
         alert(data.message);
-        localStorage.setItem("verifyEmail", email);
-
-        navigate("/verify-email");
         return;
       }
 
@@ -82,8 +79,11 @@ export default function Signup() {
         return;
       }
 
-      alert("Account created successfully!");
-      navigate("/login");
+      localStorage.setItem("verifyEmail", email);
+
+      alert("Verification OTP has been sent to your email.");
+
+      navigate("/verify-email");
     } catch (err) {
       console.log(err);
       alert("Server Error");
