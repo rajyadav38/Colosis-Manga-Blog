@@ -1,7 +1,8 @@
 const pool = require("../config/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-
+const db = require("../config/db");
+const sendVerificationEmail = require("../utils/sendVerificationEmail");
 exports.signup = async (req, res) => {
   try {
     const { username, email, password } = req.body;
