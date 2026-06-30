@@ -39,6 +39,9 @@ export default function Signup() {
 
       if (!res.ok) {
         alert(data.message);
+        localStorage.setItem("verifyEmail", email);
+
+        navigate("/verify-email");
         return;
       }
 

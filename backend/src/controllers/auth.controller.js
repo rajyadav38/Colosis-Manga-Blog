@@ -3,45 +3,69 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 exports.signup = async (req, res) => {
-  console.log("Signup body:", req.body);
-
-  // 🛡️ SAFETY CHECK (no destructuring)
-  if (!req.body || typeof req.body !== "object") {
-    return res.status(400).json({ message: "Invalid request body" });
-  }
-
-  const username = req.body.username;
-  const email = req.body.email;
-  const password = req.body.password;
-
-  if (!username || !password) {
-    return res.status(400).json({
-      message: "Username and password are required",
-    });
-  }
-
   try {
-    // Check if user exists
-    const [existing] = await pool.query(
-      "SELECT id FROM users WHERE username = ?",
-      [username],
+    const { username, email, password } = req.body;
+
+    const [existing] = await db.query(
+      `
+      SELECT *
+      FROM users
+      WHERE email = ?
+      `,
+      [email],
     );
 
     if (existing.length > 0) {
-      return res.status(409).json({ message: "User already exists" });
+      return res.status(400).json({
+        message: "Email already exists",
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await pool.query(
-      "INSERT INTO users (username, email, password) VALUES (?, ?, ?)",
+    await db.query(
+      `
+      INSERT INTO users
+      (
+        username,
+        email,
+        password,
+        is_verified
+      )
+      VALUES (?, ?, ?, false)
+      `,
       [username, email, hashedPassword],
     );
 
-    return res.status(201).json({ message: "Signup successful" });
-  } catch (err) {
-    console.error(err);
-    return res.status(500).json({ message: "Signup failed" });
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await db.query(
+      `
+      INSERT INTO email_verifications
+      (
+        email,
+        otp,
+        expires_at
+      )
+      VALUES (?, ?, ?)
+      `,
+      [email, otp, expiresAt],
+    );
+
+    await sendVerificationEmail(email, otp);
+
+    return res.json({
+      success: true,
+      message: "OTP sent successfully",
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Signup failed",
+    });
   }
 };
 
@@ -63,6 +87,11 @@ exports.login = async (req, res) => {
     }
 
     const user = rows[0];
+    if (!user.is_verified) {
+      return res.status(403).json({
+        message: "Please verify your email first.",
+      });
+    }
     const match = await bcrypt.compare(password, user.password);
 
     if (!user.password) {

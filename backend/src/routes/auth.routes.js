@@ -6,6 +6,7 @@ const sendOtpEmail = require("../services/email.service");
 const pool = require("../config/db");
 const authController = require("../controllers/auth.controller");
 const db = require("../config/db");
+const sendVerificationEmail = require("../utils/sendVerificationEmail");
 router.post("/google", async (req, res) => {
   try {
     const { firebaseUid, username, email, avatar } = req.body;
@@ -197,6 +198,66 @@ router.post("/reset-password", async (req, res) => {
 
     res.status(500).json({
       message: "Server Error",
+    });
+  }
+});
+
+router.post("/verify-email", async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const [rows] = await db.query(
+      `
+          SELECT *
+          FROM email_verifications
+          WHERE email = ?
+          AND otp = ?
+          ORDER BY id DESC
+          LIMIT 1
+          `,
+      [email, otp],
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({
+        message: "Invalid OTP",
+      });
+    }
+
+    const data = rows[0];
+
+    if (new Date() > new Date(data.expires_at)) {
+      return res.status(400).json({
+        message: "OTP expired",
+      });
+    }
+
+    await db.query(
+      `
+        UPDATE users
+        SET is_verified = true
+        WHERE email = ?
+        `,
+      [email],
+    );
+
+    await db.query(
+      `
+        DELETE FROM email_verifications
+        WHERE email = ?
+        `,
+      [email],
+    );
+
+    res.json({
+      success: true,
+      message: "Email verified successfully",
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Server error",
     });
   }
 });
