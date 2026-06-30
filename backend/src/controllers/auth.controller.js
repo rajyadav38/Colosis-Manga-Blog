@@ -93,7 +93,6 @@ exports.login = async (req, res) => {
         message: "Please verify your email first.",
       });
     }
-    const match = await bcrypt.compare(password, user.password);
 
     if (!user.password) {
       return res.status(400).json({
@@ -101,6 +100,8 @@ exports.login = async (req, res) => {
           "This account uses Google Sign In. Please continue with Google.",
       });
     }
+
+    const match = await bcrypt.compare(password, user.password);
 
     if (!match) {
       return res.status(401).json({ message: "Invalid credentials" });
