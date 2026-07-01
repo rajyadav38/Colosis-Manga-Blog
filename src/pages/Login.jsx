@@ -4,17 +4,23 @@ import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth } from "../firebase";
 import "./Auth.css";
 import logo from "../assets/colosis-logo.png";
-
+import toast from "react-hot-toast";
+import { useLoading } from "../context/LoadingContext";
 export default function Login({ setUser }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const { startLoading, finishLoading } = useLoading();
   const navigate = useNavigate();
   const API_URL = process.env.REACT_APP_API_URL;
 
   const handleGoogleLogin = async () => {
     try {
+      setGoogleLoading(true);
+      startLoading();
+
       const provider = new GoogleAuthProvider();
 
       const result = await signInWithPopup(auth, provider);
@@ -37,7 +43,8 @@ export default function Login({ setUser }) {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message);
+        toast.error(data.message);
+        finishLoading();
         return;
       }
 
@@ -47,18 +54,28 @@ export default function Login({ setUser }) {
 
       setUser(data.user);
 
-      navigate("/");
+      toast.success(`Welcome ${data.user.username} 🚀`);
+
+      setTimeout(() => {
+        finishLoading();
+        navigate("/");
+      }, 1200);
     } catch (error) {
       console.log(error);
-      alert("Google Login Failed");
+      toast.error("Google Login Failed");
+      finishLoading();
+    } finally {
+      setGoogleLoading(false);
     }
   };
-
   const login = async () => {
     if (!username || !password) {
-      alert("Please fill all fields.");
+      toast.error("Please fill all fields.");
       return;
     }
+
+    setLoading(true);
+    startLoading();
 
     try {
       const res = await fetch(`${API_URL}/api/auth/login`, {
@@ -67,7 +84,7 @@ export default function Login({ setUser }) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username,
+          username: username.trim(),
           password,
         }),
       });
@@ -75,7 +92,8 @@ export default function Login({ setUser }) {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Login Failed");
+        toast.error(data.message || "Login Failed");
+        finishLoading();
         return;
       }
 
@@ -85,10 +103,18 @@ export default function Login({ setUser }) {
 
       setUser(data.user);
 
-      navigate("/");
+      toast.success("Welcome back to Colosis 🚀");
+
+      setTimeout(() => {
+        finishLoading();
+        navigate("/");
+      }, 1200);
     } catch (error) {
       console.log(error);
-      alert("Server Error");
+      toast.error("Server Error");
+      finishLoading();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -136,13 +162,33 @@ export default function Login({ setUser }) {
           </p>
         </div>
 
-        <button className="auth-btn" onClick={login}>
-          Login
+        <button className="auth-btn" onClick={login} disabled={loading}>
+          {loading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2"></span>
+              Logging in...
+            </>
+          ) : (
+            "Login"
+          )}
         </button>
 
-        <button className="google-btn" onClick={handleGoogleLogin}>
-          <i className="bi bi-google me-2"></i>
-          Continue with Google
+        <button
+          className="google-btn"
+          onClick={handleGoogleLogin}
+          disabled={googleLoading}
+        >
+          {googleLoading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2"></span>
+              Connecting...
+            </>
+          ) : (
+            <>
+              <i className="bi bi-google me-2"></i>
+              Continue with Google
+            </>
+          )}
         </button>
 
         <p className="auth-link">

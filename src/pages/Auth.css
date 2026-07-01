@@ -156,3 +156,15 @@
 .forgot-link:hover {
   color: #ff4e8c;
 }
+
+.auth-btn:disabled,
+.google-btn:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.spinner-border-sm {
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+}

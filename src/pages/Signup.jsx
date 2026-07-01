@@ -4,18 +4,25 @@ import { auth } from "../firebase";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import "./Auth.css";
 import logo from "../assets/colosis-logo.png";
-
+import toast from "react-hot-toast";
+import { useLoading } from "../context/LoadingContext";
 export default function Signup() {
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const { startLoading, finishLoading } = useLoading();
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const API_URL = process.env.REACT_APP_API_URL;
 
   const handleGoogleSignup = async () => {
     try {
+      setGoogleLoading(true);
+      startLoading();
+
       const provider = new GoogleAuthProvider();
 
       const result = await signInWithPopup(auth, provider);
@@ -38,7 +45,8 @@ export default function Signup() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message);
+        toast.error(data.message || "Google signup failed");
+        finishLoading();
         return;
       }
 
@@ -46,18 +54,28 @@ export default function Signup() {
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("isLoggedIn", "true");
 
-      navigate("/");
+      toast.success(`Welcome ${data.user.username} 🚀`);
+
+      setTimeout(() => {
+        finishLoading();
+        navigate("/");
+      }, 1200);
     } catch (error) {
       console.log(error);
-      alert("Google signup failed.");
+      toast.error("Google signup failed.");
+      finishLoading();
+    } finally {
+      setGoogleLoading(false);
     }
   };
-
   const signup = async () => {
     if (!username || !email || !password) {
-      alert("Please fill all fields.");
+      toast.error("Please fill all fields.");
       return;
     }
+
+    setLoading(true);
+    startLoading();
 
     try {
       const res = await fetch(`${API_URL}/api/auth/signup`, {
@@ -66,8 +84,8 @@ export default function Signup() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username,
-          email,
+          username: username.trim(),
+          email: email.trim().toLowerCase(),
           password,
         }),
       });
@@ -75,18 +93,25 @@ export default function Signup() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Signup failed");
+        toast.error(data.message || "Signup failed");
+        finishLoading();
         return;
       }
 
-      localStorage.setItem("verifyEmail", email);
+      localStorage.setItem("verifyEmail", email.trim().toLowerCase());
 
-      alert("Verification OTP has been sent to your email.");
+      toast.success("OTP sent to your email ✨");
 
-      navigate("/verify-email");
-    } catch (err) {
-      console.log(err);
-      alert("Server Error");
+      setTimeout(() => {
+        finishLoading();
+        navigate("/verify-email");
+      }, 1200);
+    } catch (error) {
+      console.log(error);
+      toast.error("Server Error");
+      finishLoading();
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -122,13 +147,36 @@ export default function Signup() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        <button className="auth-btn" onClick={signup}>
-          Create Account
+        <button className="auth-btn" onClick={signup} disabled={loading}>
+          {loading ? (
+            <>
+              <span className="spinner-border spinner-border-sm me-2"></span>
+              Creating Account...
+            </>
+          ) : (
+            "Create Account"
+          )}
         </button>
 
-        <button className="google-btn" onClick={handleGoogleSignup}>
-          <i className="bi bi-google me-2"></i>
-          Continue with Google
+        <button
+          className="google-btn"
+          onClick={handleGoogleSignup}
+          disabled={googleLoading}
+        >
+          {googleLoading ? (
+            <>
+              <span
+                className="spinner-border spinner-border-sm me-2"
+                role="status"
+              ></span>
+              Connecting...
+            </>
+          ) : (
+            <>
+              <i className="bi bi-google me-2"></i>
+              Continue with Google
+            </>
+          )}
         </button>
 
         <p className="auth-link">

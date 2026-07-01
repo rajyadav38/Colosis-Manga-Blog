@@ -4,7 +4,9 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./index.css";
 
 import { lightTheme, darkTheme } from "./theme/themes";
-
+import LoadingBar from "react-top-loading-bar";
+import { useLoading } from "./context/LoadingContext";
+import { Toaster } from "react-hot-toast";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import MobileNav from "./components/MobileNav";
@@ -31,7 +33,7 @@ export default function MangaBlogApp() {
   const [darkMode, setDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const theme = darkMode ? darkTheme : lightTheme;
-
+  const { loadingRef } = useLoading();
   const [user, setUser] = useState(() => {
     try {
       const storedUser = localStorage.getItem("user");
@@ -52,7 +54,19 @@ export default function MangaBlogApp() {
       className={darkMode ? "app dark" : "app"}
       style={{ minHeight: "100vh" }}
     >
+      <LoadingBar color="#ff4fd8" ref={loadingRef} height={4} shadow={true} />
       <Router>
+        <Toaster
+          position="top-right"
+          reverseOrder={false}
+          toastOptions={{
+            style: {
+              background: "#151932",
+              color: "#fff",
+              border: "1px solid #8b5cf6",
+            },
+          }}
+        />
         <Routes>
           <Route
             path="/login"
