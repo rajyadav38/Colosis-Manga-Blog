@@ -36,6 +36,7 @@ export default function ResetPassword() {
       }
 
       localStorage.removeItem("resetEmail");
+      localStorage.removeItem("resetOtpExpiry");
 
       alert("Password reset successful.");
 

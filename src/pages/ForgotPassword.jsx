@@ -29,6 +29,8 @@ export default function ForgotPassword() {
 
       localStorage.setItem("resetEmail", email);
 
+      localStorage.setItem("resetOtpExpiry", Date.now() + 60000);
+
       navigate("/verify-otp");
     } catch (error) {
       console.log(error);
