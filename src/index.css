@@ -11,6 +11,17 @@ html {
   overflow-x: hidden;
 }
 
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  background: #03051f !important;
+  overflow-x: hidden;
+}
+
 /* 🌞 Light Mode Base */
 .app {
   background: radial-gradient(
@@ -251,8 +262,7 @@ html {
     display: none;
   }
 
-  /* Prevent content from hiding behind bottom nav */
-  .app {
+  .app.has-mobile-nav {
     padding-bottom: 72px;
   }
 }
@@ -297,11 +307,6 @@ html {
   /* Hide top navbar on mobile */
   .navbar {
     display: none;
-  }
-
-  /* Prevent content from hiding behind bottom nav */
-  .app {
-    padding-bottom: 72px;
   }
 }
 

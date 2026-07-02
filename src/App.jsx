@@ -51,7 +51,9 @@ export default function MangaBlogApp() {
 
   return (
     <div
-      className={darkMode ? "app dark" : "app"}
+      className={`${darkMode ? "app dark" : "app"} ${
+        user ? "has-mobile-nav" : ""
+      }`}
       style={{ minHeight: "100vh" }}
     >
       <LoadingBar color="#ff4fd8" ref={loadingRef} height={4} shadow={true} />
