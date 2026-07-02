@@ -104,6 +104,7 @@ export default function Signup() {
 
       setTimeout(() => {
         finishLoading();
+        localStorage.setItem("otpExpiry", Date.now() + 60000);
         navigate("/verify-email");
       }, 1200);
     } catch (error) {

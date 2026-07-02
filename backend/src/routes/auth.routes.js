@@ -262,6 +262,50 @@ router.post("/verify-email", async (req, res) => {
   }
 });
 
+router.post("/resend-verification-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+    await db.query(
+      `
+        DELETE FROM email_verifications
+        WHERE email = ?
+        `,
+      [email],
+    );
+
+    await db.query(
+      `
+        INSERT INTO email_verifications
+        (
+          email,
+          otp,
+          expires_at
+        )
+        VALUES (?, ?, ?)
+        `,
+      [email, otp, expiresAt],
+    );
+
+    await sendVerificationEmail(email, otp);
+
+    res.json({
+      success: true,
+      message: "OTP resent successfully",
+    });
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Failed to resend OTP",
+    });
+  }
+});
+
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
 
