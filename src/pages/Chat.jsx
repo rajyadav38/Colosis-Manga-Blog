@@ -10,34 +10,60 @@ export default function Chat({ theme }) {
   const [input, setInput] = useState("");
   const API_URL = process.env.REACT_APP_API_URL;
   const user = JSON.parse(localStorage.getItem("user"));
-  const userId = Number(user?.id);
+  const userId = String(user?.id);
 
   // -------------------------------
   // Load users
   // -------------------------------
 
   useEffect(() => {
-    fetch(`${API_URL}/api/users`)
-      .then((res) => res.json())
-      .then((data) => {
-        const filteredUsers = data.filter(
-          (u) => Number(u.id) !== Number(userId),
-        );
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/users`);
+        const data = await res.json();
+
+        const filteredUsers = data.filter((u) => String(u.id) !== userId);
 
         setUsers(filteredUsers);
 
-        if (filteredUsers.length > 0) {
-          setActiveUser(filteredUsers[0]);
-        }
-
         const msgState = {};
+
         filteredUsers.forEach((u) => {
-          msgState[u.id] = [];
+          msgState[String(u.id)] = [];
         });
 
         setMessages(msgState);
-      });
-  }, [userId]);
+
+        // Select first user automatically
+        if (filteredUsers.length > 0) {
+          const firstUser = filteredUsers[0];
+
+          setActiveUser(firstUser);
+
+          const convoRes = await fetch(`${API_URL}/api/chat/conversation`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              senderId: userId,
+              receiverId: String(firstUser.id),
+            }),
+          });
+
+          const conversation = await convoRes.json();
+
+          await loadMessages(conversation._id, String(firstUser.id));
+        }
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    if (userId) {
+      fetchUsers();
+    }
+  }, [userId, API_URL]);
 
   // -------------------------------
   // Socket connection
@@ -51,8 +77,8 @@ export default function Chat({ theme }) {
     socketRef.current.emit("join", userId);
 
     socketRef.current.on("receiveMessage", (message) => {
-      const senderId = Number(message.senderId);
-      const receiverId = Number(message.receiverId);
+      const senderId = String(message.senderId);
+      const receiverId = String(message.receiverId);
 
       const otherUserId = senderId === userId ? receiverId : senderId;
 
@@ -61,7 +87,7 @@ export default function Chat({ theme }) {
         [otherUserId]: [
           ...(prev[otherUserId] || []),
           {
-            senderId: senderId,
+            senderId,
             text: message.text,
           },
         ],
@@ -91,7 +117,7 @@ export default function Chat({ theme }) {
 
     const message = {
       senderId: userId,
-      receiverId: activeUser.id,
+      receiverId: String(activeUser.id),
       text: input,
     };
 
@@ -99,9 +125,12 @@ export default function Chat({ theme }) {
 
     setMessages((prev) => ({
       ...prev,
-      [activeUser.id]: [
-        ...(prev[activeUser.id] || []),
-        { senderId: userId, text: input },
+      [String(activeUser.id)]: [
+        ...(prev[String(activeUser.id)] || []),
+        {
+          senderId: userId,
+          text: input,
+        },
       ],
     }));
 
@@ -112,26 +141,25 @@ export default function Chat({ theme }) {
   // Load previous messages
   // -------------------------------
 
-  const loadMessages = async (conversationId) => {
+  const loadMessages = async (conversationId, selectedUserId) => {
     try {
       const res = await fetch(`${API_URL}/api/chat/messages/${conversationId}`);
 
       const data = await res.json();
 
       const formatted = data.map((m) => ({
-        senderId: Number(m.senderId),
+        senderId: String(m.senderId),
         text: m.text,
       }));
 
       setMessages((prev) => ({
         ...prev,
-        [activeUser.id]: formatted,
+        [selectedUserId]: formatted,
       }));
     } catch (err) {
       console.error("Error loading messages", err);
     }
   };
-
   return (
     <div className="container py-4" style={{ color: theme.text }}>
       <h2 className="fw-bold mb-3">💬 Chats</h2>
@@ -160,16 +188,18 @@ export default function Chat({ theme }) {
 
                   const res = await fetch(`${API_URL}/api/chat/conversation`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
                     body: JSON.stringify({
                       senderId: userId,
-                      receiverId: u.id,
+                      receiverId: String(u.id),
                     }),
                   });
 
                   const conversation = await res.json();
 
-                  loadMessages(conversation._id);
+                  loadMessages(conversation._id, String(u.id));
                 }}
               >
                 {u.username}
@@ -190,14 +220,14 @@ export default function Chat({ theme }) {
               overflowY: "auto",
             }}
           >
-            {activeUser && messages[activeUser.id]?.length === 0 && (
+            {activeUser && messages[String(activeUser.id)]?.length === 0 && (
               <p className="text-muted">
                 Start chatting with {activeUser.username}...
               </p>
             )}
 
             {activeUser &&
-              messages[activeUser.id]?.map((msg, i) => (
+              messages[String(activeUser.id)]?.map((msg, i) => (
                 <div
                   key={i}
                   style={{

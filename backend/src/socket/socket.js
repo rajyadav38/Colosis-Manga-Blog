@@ -9,37 +9,42 @@ module.exports = function (io) {
 
     // user joins
     socket.on("join", (userId) => {
-      onlineUsers.set(userId, socket.id);
+      onlineUsers.set(String(userId), socket.id);
 
-      console.log("Online users:", onlineUsers);
+      console.log("Online users:");
+      console.log(onlineUsers);
     });
 
     // send message
     socket.on("sendMessage", async (data) => {
-      const { senderId, receiverId, text } = data;
+      const sender = String(data.senderId);
+      const receiver = String(data.receiverId);
+      const text = data.text;
 
       try {
         // find conversation
         let conversation = await Conversation.findOne({
-          members: { $all: [senderId, receiverId] },
+          members: { $all: [sender, receiver] },
         });
 
         // create conversation if not exists
         if (!conversation) {
           conversation = await Conversation.create({
-            members: [senderId, receiverId],
+            members: [sender, receiver],
           });
         }
 
         // save message
         const message = await Message.create({
           conversationId: conversation._id,
-          senderId,
+          senderId: sender,
           text,
         });
 
+        message.receiverId = receiver;
+
         // send to receiver
-        const receiverSocket = onlineUsers.get(receiverId);
+        const receiverSocket = onlineUsers.get(receiver);
 
         if (receiverSocket) {
           io.to(receiverSocket).emit("receiveMessage", message);
