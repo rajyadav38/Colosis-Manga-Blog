@@ -17,19 +17,18 @@ export default function Chat({ theme }) {
   // -------------------------------
 
   useEffect(() => {
-    fetch(`${API_URL}/api/users`)
+    fetch(`${API_URL}/api/users/${userId}`)
       .then((res) => res.json())
       .then((data) => {
-        const filteredUsers = data.filter((u) => u.id !== userId);
+        setUsers(data);
 
-        setUsers(filteredUsers);
-
-        if (filteredUsers.length > 0) {
-          setActiveUser(filteredUsers[0]);
+        if (data.length > 0) {
+          setActiveUser(data[0]);
         }
 
         const msgState = {};
-        filteredUsers.forEach((u) => {
+
+        data.forEach((u) => {
           msgState[u.id] = [];
         });
 

@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import HomeSkeleton from "../components/skeletons/HomeSkeleton";
 export default function Home({ theme }) {
   const navigate = useNavigate();
   const API_URL = process.env.REACT_APP_API_URL;
   const [stories, setStories] = useState([]);
-
+  const [loading, setLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem("user"));
   const fetchPublishedStories = async () => {
     try {
+      setLoading(true);
+
       const res = await fetch(`${API_URL}/api/stories/published`);
 
       const data = await res.json();
@@ -16,6 +18,8 @@ export default function Home({ theme }) {
       setStories(data);
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -34,6 +38,13 @@ export default function Home({ theme }) {
       console.log(error);
     }
   };
+  if (loading) {
+    return (
+      <div className="container py-4">
+        <HomeSkeleton />
+      </div>
+    );
+  }
 
   return (
     <div

@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { animateCards } from "../utils/animations";
-
+import ProfileSkeleton from "../components/skeletons/ProfileSkeleton";
 export default function Profile({ theme }) {
   const navigate = useNavigate();
   const location = useLocation();
   const API_URL = process.env.REACT_APP_API_URL;
   const user = JSON.parse(localStorage.getItem("user"));
-
+  const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
 
   const [followStats, setFollowStats] = useState({
@@ -22,21 +22,20 @@ export default function Profile({ theme }) {
 
   const fetchProfile = useCallback(async () => {
     try {
-      // profile
+      setLoading(true);
+
       const profileRes = await fetch(`${API_URL}/api/profile/${user.id}`);
 
       const profileData = await profileRes.json();
 
       setProfile(profileData);
 
-      // followers
       const statsRes = await fetch(`${API_URL}/api/follow-stats/${user.id}`);
 
       const statsData = await statsRes.json();
 
       setFollowStats(statsData);
 
-      // stories
       const storiesRes = await fetch(
         `${API_URL}/api/stories/author/${user.id}`,
       );
@@ -45,7 +44,6 @@ export default function Profile({ theme }) {
 
       setStories(storiesData);
 
-      // reels
       const reelsRes = await fetch(`${API_URL}/api/reels/user/${user.id}`);
 
       const reelsData = await reelsRes.json();
@@ -53,6 +51,8 @@ export default function Profile({ theme }) {
       setReels(reelsData);
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   }, [user.id]);
 
@@ -61,12 +61,8 @@ export default function Profile({ theme }) {
     fetchProfile();
   }, [fetchProfile, location.pathname]);
 
-  if (!profile) {
-    return (
-      <div className="container py-5">
-        <h3>Loading Profile...</h3>
-      </div>
-    );
+  if (loading || !profile) {
+    return <ProfileSkeleton />;
   }
 
   return (

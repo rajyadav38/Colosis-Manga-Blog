@@ -1,15 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
-
+import ScrollsSkeleton from "../components/skeletons/ScrollsSkeleton";
 export default function Scrolls() {
   const [reels, setReels] = useState([]);
   const [commentInputs, setCommentInputs] = useState({});
   const videoRefs = useRef([]);
   const API_URL = process.env.REACT_APP_API_URL;
   const currentUser = JSON.parse(localStorage.getItem("user"));
-
+  const [loading, setLoading] = useState(true);
   // FETCH REELS
   const fetchReels = async () => {
     try {
+      setLoading(true);
+
       const res = await fetch(`${API_URL}/api/reels`);
 
       const data = await res.json();
@@ -17,6 +19,8 @@ export default function Scrolls() {
       setReels(data);
     } catch (err) {
       console.log(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -118,6 +122,9 @@ export default function Scrolls() {
 
     alert("🔗 Reel link copied!");
   };
+  if (loading) {
+    return <ScrollsSkeleton />;
+  }
 
   return (
     <div

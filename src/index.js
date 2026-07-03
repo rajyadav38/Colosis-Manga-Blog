@@ -5,11 +5,15 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { LoadingProvider } from "./context/LoadingContext";
+import "react-loading-skeleton/dist/skeleton.css";
+import { SkeletonTheme } from "react-loading-skeleton";
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <LoadingProvider>
-      <App />
+      <SkeletonTheme baseColor="#171c35" highlightColor="#242b52">
+        <App />
+      </SkeletonTheme>
     </LoadingProvider>
   </React.StrictMode>,
 );
