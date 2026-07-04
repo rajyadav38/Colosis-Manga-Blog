@@ -5,6 +5,7 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { LoadingProvider } from "./context/LoadingContext";
+import "bootstrap-icons/font/bootstrap-icons.css";
 import "react-loading-skeleton/dist/skeleton.css";
 import { SkeletonTheme } from "react-loading-skeleton";
 const root = ReactDOM.createRoot(document.getElementById("root"));

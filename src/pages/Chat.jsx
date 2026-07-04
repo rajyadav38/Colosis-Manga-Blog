@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
-
+import "./Chat.css";
 export default function Chat({ theme }) {
   const socketRef = useRef(null);
 
   const [users, setUsers] = useState([]);
   const [activeUser, setActiveUser] = useState(null);
   const [messages, setMessages] = useState({});
+  const [showChat, setShowChat] = useState(false);
   const [input, setInput] = useState("");
   const API_URL = process.env.REACT_APP_API_URL;
   const user = JSON.parse(localStorage.getItem("user"));
@@ -161,116 +162,136 @@ export default function Chat({ theme }) {
     }
   };
   return (
-    <div className="container py-4" style={{ color: theme.text }}>
-      <h2 className="fw-bold mb-3">💬 Chats</h2>
+    <div className="container py-4 chat-page">
+      <div className="chat-container">
+        {/* USERS SIDEBAR */}
+        <div className={`chat-users ${showChat ? "mobile-hide" : ""}`}>
+          <h2 className="chat-title">💬 Chats</h2>
 
-      <div className="row">
-        {/* LEFT USERS */}
+          {users.map((u) => (
+            <div
+              key={u.id}
+              className={`chat-user-card ${
+                activeUser?.id === u.id ? "active" : ""
+              }`}
+              onClick={async () => {
+                setActiveUser(u);
+                setShowChat(true);
 
-        <div className="col-4">
-          <div
-            className="p-3 rounded shadow anime-card glow"
-            style={{ background: theme.card }}
-          >
-            <h5 className="fw-bold mb-3">Users</h5>
+                const res = await fetch(`${API_URL}/api/chat/conversation`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    senderId: userId,
+                    receiverId: String(u.id),
+                  }),
+                });
 
-            {users.map((u) => (
-              <div
-                key={u.id}
-                className="p-2 rounded mb-2"
-                style={{
-                  background: activeUser?.id === u.id ? theme.accent : theme.bg,
-                  color: activeUser?.id === u.id ? "white" : theme.text,
-                  cursor: "pointer",
-                }}
-                onClick={async () => {
-                  setActiveUser(u);
+                const conversation = await res.json();
 
-                  const res = await fetch(`${API_URL}/api/chat/conversation`, {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                      senderId: userId,
-                      receiverId: String(u.id),
-                    }),
-                  });
+                loadMessages(conversation._id, String(u.id));
+              }}
+            >
+              <img
+                src={
+                  u.avatar || `https://ui-avatars.com/api/?name=${u.username}`
+                }
+                alt={u.username}
+                className="chat-avatar"
+              />
 
-                  const conversation = await res.json();
-
-                  loadMessages(conversation._id, String(u.id));
-                }}
-              >
-                {u.username}
+              <div className="chat-user-info">
+                <h6>{u.username}</h6>
+                <small>Tap to chat</small>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
 
         {/* CHAT WINDOW */}
-
-        <div className="col-8">
-          <div
-            id="chat-box"
-            className="p-3 rounded shadow anime-card glow mb-3"
-            style={{
-              background: theme.card,
-              height: "450px",
-              overflowY: "auto",
-            }}
-          >
-            {activeUser && messages[String(activeUser.id)]?.length === 0 && (
-              <p className="text-muted">
-                Start chatting with {activeUser.username}...
-              </p>
-            )}
-
-            {activeUser &&
-              messages[String(activeUser.id)]?.map((msg, i) => (
-                <div
-                  key={i}
-                  style={{
-                    textAlign: msg.senderId === userId ? "right" : "left",
-                  }}
-                >
-                  <div
-                    className="d-inline-block p-2 rounded mb-2"
-                    style={{
-                      background:
-                        msg.senderId === userId ? theme.accent : theme.bg,
-                      color: msg.senderId === userId ? "white" : theme.text,
-                      maxWidth: "70%",
-                    }}
-                  >
-                    {msg.text}
-                  </div>
+        <div className={`chat-window ${showChat ? "mobile-show" : ""}`}>
+          {activeUser && (
+            <>
+              {/* HEADER */}
+              <div className="chat-header">
+                <div className="chat-mobile-back">
+                  <i
+                    className="bi bi-arrow-left"
+                    onClick={() => setShowChat(false)}
+                  ></i>
                 </div>
-              ))}
-          </div>
+                <img
+                  src={
+                    activeUser.avatar ||
+                    `https://ui-avatars.com/api/?name=${activeUser.username}`
+                  }
+                  alt=""
+                  className="chat-avatar"
+                />
 
-          {/* INPUT */}
+                <div>
+                  <h6>{activeUser.username}</h6>
+                  <small>Active now</small>
+                </div>
+              </div>
 
-          <div className="d-flex">
-            <input
-              className="form-control"
-              placeholder={
-                activeUser
-                  ? `Message ${activeUser.username}...`
-                  : "Select a user"
-              }
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-            />
+              {/* MESSAGES */}
+              <div id="chat-box" className="chat-messages">
+                {messages[String(activeUser.id)]?.length === 0 && (
+                  <p className="text-muted">
+                    Start chatting with {activeUser.username}...
+                  </p>
+                )}
 
-            <button
-              className="btn ms-2"
-              style={{ background: theme.accent, color: "white" }}
-              onClick={sendMessage}
-            >
-              Send
-            </button>
-          </div>
+                {messages[String(activeUser.id)]?.map((msg, i) => (
+                  <div
+                    key={i}
+                    className={
+                      msg.senderId === userId
+                        ? "message-row me"
+                        : "message-row other"
+                    }
+                  >
+                    <div
+                      className={
+                        msg.senderId === userId
+                          ? "message-bubble me"
+                          : "message-bubble other"
+                      }
+                    >
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* INPUT */}
+              <div className="chat-input-box">
+                <input
+                  className="chat-input"
+                  placeholder={`Message ${activeUser.username}...`}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      sendMessage();
+                    }
+                  }}
+                />
+
+                <button
+                  className="send-btn"
+                  onClick={sendMessage}
+                  disabled={!input.trim()}
+                >
+                  <i className="bi bi-send-fill"></i>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

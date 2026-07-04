@@ -218,6 +218,10 @@ body,
     width: 100%;
   }
 }
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 /* 📱 Mobile Bottom Navbar */
 .mobile-nav {
