@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/colosis-logo.png";
-
+import { NavLink } from "react-router-dom";
+import {
+  FiHome,
+  FiEdit3,
+  FiMessageCircle,
+  FiVideo,
+  FiSearch,
+} from "react-icons/fi";
 export default function Navbar({
   theme,
   darkMode,
@@ -14,6 +21,7 @@ export default function Navbar({
   const [results, setResults] = useState([]);
   const navigate = useNavigate();
   const API_URL = process.env.REACT_APP_API_URL;
+  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -39,198 +47,236 @@ export default function Navbar({
   };
 
   return (
-    <nav
-      className="navbar navbar-expand-lg px-3 mobile-grid-nav"
-      style={{ background: theme.card }}
-    >
-      <Link
-        to="/"
-        className="navbar-brand d-flex align-items-center nav-logo"
-        style={{ padding: "4px 0" }}
+    <>
+      <nav
+        className="navbar-modern"
+        style={{
+          background: theme.card,
+          color: theme.text,
+        }}
       >
-        <img src={logo} alt="Colosis" className="navbar-logo" />
-      </Link>
+        {/* Logo */}
+        <Link to="/" className="navbar-brand nav-logo">
+          <img src={logo} alt="Colosis" className="navbar-logo" />
+        </Link>
 
-      <div
-        className="d-flex align-items-center justify-content-center flex-grow-1"
-        style={{ gap: "20px" }}
-      >
-        <ul className="navbar-nav mx-auto desktop-nav-links">
-          <Link
-            className="nav-link"
+        {/* DESKTOP ICONS */}
+        <div className="desktop-nav-center">
+          <NavLink
             to="/"
-            style={{
-              color: theme.text,
-              fontFamily: "'Kaushan Script', cursive",
-              fontSize: "20px",
-            }}
+            className={({ isActive }) =>
+              `nav-icon-link ${isActive ? "active-nav" : ""}`
+            }
           >
-            Home
-          </Link>
+            <FiHome />
+            <span>Home</span>
+          </NavLink>
 
-          <Link
-            className="nav-link"
+          <NavLink
             to="/create"
-            style={{
-              color: theme.text,
-              fontFamily: "'Kaushan Script', cursive",
-              fontSize: "20px",
-            }}
+            className={({ isActive }) =>
+              `nav-icon-link ${isActive ? "active-nav" : ""}`
+            }
           >
-            Create
-          </Link>
+            <FiEdit3 />
+            <span>Create</span>
+          </NavLink>
 
-          <Link
-            className="nav-link"
+          <NavLink
             to="/scrolls"
-            style={{
-              color: theme.text,
-              fontFamily: "'Kaushan Script', cursive",
-              fontSize: "20px",
-            }}
+            className={({ isActive }) =>
+              `nav-icon-link ${isActive ? "active-nav" : ""}`
+            }
           >
-            Scrolls
-          </Link>
+            <FiVideo />
+            <span>Scrolls</span>
+          </NavLink>
 
-          <Link
-            className="nav-link"
+          <NavLink
             to="/chat"
-            style={{
-              color: theme.text,
-              fontFamily: "'Kaushan Script', cursive",
-              fontSize: "20px",
-            }}
+            className={({ isActive }) =>
+              `nav-icon-link ${isActive ? "active-nav" : ""}`
+            }
           >
-            Chat
-          </Link>
-        </ul>
-      </div>
+            <FiMessageCircle />
+            <span>Chat</span>
+          </NavLink>
+        </div>
 
-      {/* SEARCH */}
-      <div style={{ position: "relative", width: "240px" }}>
-        <input
-          type="text"
-          placeholder="Search users..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="form-control form-control-sm navbar-search nav-search"
-          style={{
-            width: "240px",
-            borderRadius: "20px",
-            padding: "6px 14px",
-            fontFamily: "'Kaushan Script', cursive",
-            background: theme.bg,
-            color: theme.text,
-            border: `1px solid ${theme.accent}`,
-          }}
-        />
+        {/* SEARCH */}
+        <div className="nav-search-container">
+          {showSearch && (
+            <div className="nav-search-dropdown">
+              <div className="nav-search-wrapper">
+                <FiSearch className="search-input-icon" />
 
-        {results.length > 0 && (
-          <div
-            className="shadow rounded mt-1"
-            style={{
-              position: "absolute",
-              top: "100%",
-              left: 0,
-              width: "100%",
-              background: theme.card,
-              zIndex: 1000,
-              overflow: "hidden",
-            }}
-          >
-            {results.map((result) => (
-              <div
-                key={result.id}
-                className="p-2"
-                style={{
-                  cursor: "pointer",
-                  color: theme.text,
-                  borderBottom: "1px solid #333",
-                }}
-                onClick={() => {
-                  navigate(`/profile/${result.username}`);
-                  setSearchQuery("");
-                  setResults([]);
-                }}
-              >
-                @{result.username}
+                <input
+                  type="text"
+                  placeholder="Search users..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="nav-search-input"
+                />
               </div>
-            ))}
-          </div>
-        )}
-      </div>
 
-      <div className="d-flex align-items-center gap-2 ms-auto nav-actions">
-        <button
-          className="btn btn-sm"
-          style={{
-            background: theme.accent,
-            fontFamily: "'Kaushan Script', cursive",
-            color: "white",
-            borderRadius: "18px",
-          }}
-          onClick={() => setDarkMode(!darkMode)}
-        >
-          {darkMode ? "🌞 Light" : "🌙 Dark"}
-        </button>
+              {results.length > 0 && (
+                <div className="search-results">
+                  {results.map((result) => (
+                    <div
+                      key={result.id}
+                      className="search-user"
+                      onClick={() => {
+                        navigate(`/profile/${result.username}`);
+                        setSearchQuery("");
+                        setResults([]);
+                        setShowSearch(false);
+                      }}
+                    >
+                      @{result.username}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
-        {user ? (
-          <div className="dropdown">
-            <button
-              className="btn btn-sm dropdown-toggle"
-              data-bs-toggle="dropdown"
-              style={{
-                background: "#444",
-                color: "white",
-                border: "none",
-              }}
-            >
-              👤 {user.username}
-            </button>
-
-            <ul className="dropdown-menu dropdown-menu-end">
-              <li>
-                <Link className="dropdown-item" to="/profile">
-                  👤 Profile
-                </Link>
-              </li>
-
-              <li>
-                <Link className="dropdown-item" to="/dashboard">
-                  📊 Creator Dashboard
-                </Link>
-              </li>
-
-              <li>
-                <Link className="dropdown-item" to="/edit-profile">
-                  ✏️ Edit Profile
-                </Link>
-              </li>
-
-              <li>
-                <hr className="dropdown-divider" />
-              </li>
-
-              <li>
-                <button className="dropdown-item text-danger" onClick={logout}>
-                  🚪 Logout
-                </button>
-              </li>
-            </ul>
-          </div>
-        ) : (
-          <Link
-            to="/login"
-            className="btn btn-sm"
-            style={{
-              background: theme.accent,
-              color: "white",
-            }}
+        {/* RIGHT */}
+        <div className="nav-right">
+          <button
+            className="mobile-search-btn"
+            onClick={() => setShowSearch(!showSearch)}
           >
-            Login
-          </Link>
-        )}
+            <FiSearch />
+          </button>
+          <button className="theme-btn" onClick={() => setDarkMode(!darkMode)}>
+            {darkMode ? "🌞" : "🌙"}
+          </button>
+
+          {user && (
+            <div className="dropdown">
+              <button
+                className="profile-btn dropdown-toggle"
+                data-bs-toggle="dropdown"
+              >
+                {user.avatar ? (
+                  <img src={user.avatar} className="nav-profile-img" alt="" />
+                ) : (
+                  "👤"
+                )}
+
+                <span>{user.username}</span>
+              </button>
+
+              <ul className="dropdown-menu dropdown-menu-end">
+                <li>
+                  <Link className="dropdown-item" to="/profile">
+                    👤 Profile
+                  </Link>
+                </li>
+
+                <li>
+                  <Link className="dropdown-item" to="/dashboard">
+                    📊 Creator Dashboard
+                  </Link>
+                </li>
+
+                <li>
+                  <Link className="dropdown-item" to="/edit-profile">
+                    ✏️ Edit Profile
+                  </Link>
+                </li>
+
+                <li>
+                  <hr className="dropdown-divider" />
+                </li>
+
+                <li>
+                  <button
+                    className="dropdown-item text-danger"
+                    onClick={logout}
+                  >
+                    🚪 Logout
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
+      </nav>
+      {showSearch && (
+        <div className="search-overlay">
+          <div className="overlay-search-box">
+            <FiSearch className="overlay-search-icon" />
+
+            <input
+              type="text"
+              placeholder="Search for users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="overlay-search-input"
+            />
+
+            {results.length > 0 && (
+              <div className="search-results">
+                {results.map((result) => (
+                  <div
+                    key={result.id}
+                    className="search-user"
+                    onClick={() => {
+                      navigate(`/profile/${result.username}`);
+                      setSearchQuery("");
+                      setResults([]);
+                      setShowSearch(false);
+                    }}
+                  >
+                    @{result.username}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MOBILE BOTTOM NAV */}
+      <div className="mobile-nav-center">
+        <NavLink
+          to="/"
+          className={({ isActive }) =>
+            `nav-icon-link ${isActive ? "active-nav" : ""}`
+          }
+        >
+          <FiHome />
+        </NavLink>
+
+        <NavLink
+          to="/create"
+          className={({ isActive }) =>
+            `nav-icon-link ${isActive ? "active-nav" : ""}`
+          }
+        >
+          <FiEdit3 />
+        </NavLink>
+
+        <NavLink
+          to="/scrolls"
+          className={({ isActive }) =>
+            `nav-icon-link ${isActive ? "active-nav" : ""}`
+          }
+        >
+          <FiVideo />
+        </NavLink>
+
+        <NavLink
+          to="/chat"
+          className={({ isActive }) =>
+            `nav-icon-link ${isActive ? "active-nav" : ""}`
+          }
+        >
+          <FiMessageCircle />
+        </NavLink>
       </div>
-    </nav>
+    </>
   );
 }

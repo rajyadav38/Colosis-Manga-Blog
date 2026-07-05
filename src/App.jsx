@@ -9,7 +9,6 @@ import { useLoading } from "./context/LoadingContext";
 import { Toaster } from "react-hot-toast";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./routes/ProtectedRoute";
-import MobileNav from "./components/MobileNav";
 import Home from "./pages/Home";
 import Create from "./pages/Create";
 import Scrolls from "./pages/Scrolls";
@@ -51,9 +50,7 @@ export default function MangaBlogApp() {
 
   return (
     <div
-      className={`${darkMode ? "app dark" : "app"} ${
-        user ? "has-mobile-nav" : ""
-      }`}
+      className={darkMode ? "app dark" : "app"}
       style={{ minHeight: "100vh" }}
     >
       <LoadingBar color="#ff4fd8" ref={loadingRef} height={4} shadow={true} />
@@ -142,7 +139,6 @@ export default function MangaBlogApp() {
             }
           />
         </Routes>
-        <MobileNav />
       </Router>
     </div>
   );
