@@ -20,6 +20,7 @@ import EditProfile from "./pages/EditProfile";
 import PublicProfile from "./pages/PublicProfile";
 import StoryManager from "./pages/StoryManager";
 import CreatorDashboard from "./pages/CreatorDashboard";
+import CreatorStudio from "./pages/CreatorStudio";
 import ReadStory from "./pages/ReadStory";
 import BookReader from "./pages/BookReader";
 import Analytics from "./pages/Analytics";
@@ -133,6 +134,10 @@ export default function MangaBlogApp() {
                       element={<Analytics theme={theme} />}
                     />
                     <Route path="/manga/:id" element={<MangaReader />} />
+                    <Route
+                      path="/creator/:chapterId"
+                      element={<CreatorStudio theme={theme} />}
+                    />
                   </Routes>
                 </>
               </ProtectedRoute>

@@ -230,12 +230,11 @@ export default function StoryManager({ theme }) {
               📖 Read Story
             </button>
 
-            <button
-              className="btn btn-warning me-2"
-              onClick={handleGenerateBook}
-            >
-              🤖 Generate Book
-            </button>
+            {story.type === "novel" && (
+              <button className="btn btn-warning" onClick={handleGenerateBook}>
+                🤖 Generate Book
+              </button>
+            )}
 
             <button className="btn btn-success me-2" onClick={handlePublish}>
               🚀 Publish
@@ -373,6 +372,15 @@ The cave starts shaking...`
                     >
                       ✏️ Edit
                     </button>
+
+                    {(story.type === "manga" || story.type === "comic") && (
+                      <button
+                        className="btn btn-warning btn-sm"
+                        onClick={() => navigate(`/creator/${chapter._id}`)}
+                      >
+                        🎨 Creator Studio
+                      </button>
+                    )}
 
                     <button
                       className="btn btn-danger btn-sm"

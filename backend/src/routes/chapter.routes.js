@@ -3,7 +3,7 @@ const router = express.Router();
 const Story = require("../models/Story");
 const model = require("../config/gemini");
 const Chapter = require("../models/Chapter");
-
+const mongoose = require("mongoose");
 const cloudinary = require("../config/cloudinary");
 
 router.post("/create", async (req, res) => {
@@ -16,6 +16,55 @@ router.post("/create", async (req, res) => {
 
     res.status(500).json({
       message: "Failed to create chapter",
+    });
+  }
+});
+
+router.put("/:id/add-page", async (req, res) => {
+  try {
+    const chapter = await Chapter.findById(req.params.id);
+
+    if (!chapter) {
+      return res.status(404).json({
+        message: "Chapter not found",
+      });
+    }
+
+    chapter.pages.push({
+      id: new mongoose.Types.ObjectId().toString(),
+      pageNumber: chapter.pages.length + 1,
+      imageUrl: req.body.imageUrl,
+      elements: [],
+    });
+
+    await chapter.save();
+
+    res.json(chapter);
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Failed to add page",
+    });
+  }
+});
+
+router.get("/details/:id", async (req, res) => {
+  try {
+    const chapter = await Chapter.findById(req.params.id);
+
+    if (!chapter) {
+      return res.status(404).json({
+        message: "Chapter not found",
+      });
+    }
+
+    res.json(chapter);
+  } catch (error) {
+    console.log(error);
+
+    res.status(500).json({
+      message: "Server Error",
     });
   }
 });

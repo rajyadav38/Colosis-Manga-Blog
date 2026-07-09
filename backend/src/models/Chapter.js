@@ -2,11 +2,20 @@ const mongoose = require("mongoose");
 
 const chapterSchema = new mongoose.Schema(
   {
-    storyId: String,
+    storyId: {
+      type: String,
+      required: true,
+    },
 
-    chapterNumber: Number,
+    chapterNumber: {
+      type: Number,
+      required: true,
+    },
 
-    title: String,
+    title: {
+      type: String,
+      required: true,
+    },
 
     // For novels
     content: {
@@ -17,13 +26,53 @@ const chapterSchema = new mongoose.Schema(
     // For manga/comics
     pages: [
       {
-        imageUrl: String,
-        caption: {
+        pageNumber: {
+          type: Number,
+          required: true,
+        },
+
+        imageUrl: {
           type: String,
           default: "",
         },
 
-        pageNumber: Number,
+        elements: [
+          {
+            id: String, // unique id for React rendering
+
+            type: {
+              type: String,
+              enum: ["bubble", "text"],
+            },
+
+            text: String,
+
+            x: Number,
+            y: Number,
+
+            width: Number,
+            height: Number,
+
+            rotation: Number,
+
+            fontSize: Number,
+
+            color: {
+              type: String,
+              default: "#000000",
+            },
+
+            fontFamily: {
+              type: String,
+              default: "Arial",
+            },
+
+            zIndex: {
+              type: Number,
+              default: 1,
+            },
+          },
+        ],
       },
     ],
   },
