@@ -11,7 +11,6 @@ export default function StoryManager({ theme }) {
   const [chapterContent, setChapterContent] = useState("");
   const [activeTab, setActiveTab] = useState("story");
   const [editingChapter, setEditingChapter] = useState(null);
-  const [pages, setPages] = useState([]);
 
   // LOAD STORY
   const fetchStory = async () => {
@@ -57,26 +56,6 @@ export default function StoryManager({ theme }) {
       fetchStory();
     } catch (error) {
       console.log(error);
-    }
-  };
-
-  const handleGeneratePages = async (chapterId) => {
-    try {
-      const res = await fetch(
-        `${API_URL}/api/chapters/generate-pages/${chapterId}`,
-        {
-          method: "POST",
-        },
-      );
-
-      const data = await res.json();
-
-      alert(data.message);
-
-      fetchChapters();
-    } catch (error) {
-      console.log(error);
-      alert("Failed to generate pages");
     }
   };
 
@@ -127,7 +106,6 @@ export default function StoryManager({ theme }) {
         setEditingChapter(null);
         setChapterTitle("");
         setChapterContent("");
-        setPages([]);
 
         fetchChapters();
         return;
@@ -379,27 +357,6 @@ The cave starts shaking...`
                     {chapter.content?.length > 250 && "..."}
                   </p>
 
-                  {(story.type === "manga" || story.type === "comic") && (
-                    <>
-                      <p className="mt-3">
-                        📄 Generated Pages: {chapter.pages?.length || 0}
-                      </p>
-
-                      {chapter.pages?.length > 0 && (
-                        <div className="mt-2">
-                          {chapter.pages.map((page) => (
-                            <div
-                              key={page.pageNumber}
-                              className="small text-muted"
-                            >
-                              Page {page.pageNumber}: {page.caption}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
-
                   <div className="d-flex gap-2 flex-wrap">
                     <button
                       className="btn btn-primary btn-sm"
@@ -416,15 +373,6 @@ The cave starts shaking...`
                     >
                       ✏️ Edit
                     </button>
-
-                    {(story.type === "manga" || story.type === "comic") && (
-                      <button
-                        className="btn btn-warning btn-sm"
-                        onClick={() => handleGeneratePages(chapter._id)}
-                      >
-                        🤖 Generate Pages
-                      </button>
-                    )}
 
                     <button
                       className="btn btn-danger btn-sm"

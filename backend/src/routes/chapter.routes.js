@@ -3,10 +3,9 @@ const router = express.Router();
 const Story = require("../models/Story");
 const model = require("../config/gemini");
 const Chapter = require("../models/Chapter");
-const generateImage = require("../services/flux.service");
+
 const cloudinary = require("../config/cloudinary");
-const axios = require("axios");
-const streamifier = require("streamifier");
+
 router.post("/create", async (req, res) => {
   try {
     const chapter = await Chapter.create(req.body);
@@ -17,154 +16,6 @@ router.post("/create", async (req, res) => {
 
     res.status(500).json({
       message: "Failed to create chapter",
-    });
-  }
-});
-
-router.post("/generate-pages/:id", async (req, res) => {
-  console.log("🔥 GENERATE ROUTE HIT");
-  try {
-    const chapter = await Chapter.findById(req.params.id);
-
-    if (!chapter) {
-      return res.status(404).json({
-        message: "Chapter not found",
-      });
-    }
-
-    const story = await Story.findById(chapter.storyId);
-
-    if (!story) {
-      return res.status(404).json({
-        message: "Story not found",
-      });
-    }
-
-    if (story.type !== "manga" && story.type !== "comic") {
-      return res.status(400).json({
-        message:
-          "Page generation is only available for manga and comic stories.",
-      });
-    }
-
-    const prompt = `
-You are a professional manga and comic storyboard artist.
-
-Story Title:
-${story.title}
-
-Story Type:
-${story.type}
-
-Story Description:
-${story.description}
-
-Chapter Title:
-${chapter.title}
-
-Chapter Content:
-${chapter.content}
-
-Task:
-Break this chapter into pages.
-
-Return ONLY valid JSON.
-
-Format:
-
-{
-  "pages": [
-    {
-      "pageNumber": 1,
-      "description": "Detailed scene description"
-    }
-  ]
-}
-
-Rules:
-- Decide the number of pages yourself.
-- Keep important moments on separate pages.
-- Make the pages feel cinematic.
-- Do not return markdown.
-- Do not return explanations.
-`;
-
-    const result = await model.generateContent(prompt);
-
-    let text = result.response.text();
-
-    text = text
-      .replace(/```json/gi, "")
-      .replace(/```/g, "")
-      .trim();
-
-    const generated = JSON.parse(text);
-
-    const pages = [];
-
-    const pagesToGenerate = generated.pages.slice(0, 1);
-
-    for (const page of pagesToGenerate) {
-      let imagePrompt = "";
-
-      if (story.type === "manga") {
-        imagePrompt = `
-Black and white manga page.
-Professional manga artwork.
-Detailed ink drawing.
-Japanese manga style.
-${page.description}
-`;
-      } else {
-        imagePrompt = `
-Colored western comic page.
-Professional comic book illustration.
-Cinematic composition.
-${page.description}
-`;
-      }
-      try {
-        const imageUrl = await generateImage(imagePrompt);
-
-        console.log("GENERATED IMAGE URL:");
-        console.log(imageUrl);
-
-        pages.push({
-          pageNumber: page.pageNumber,
-          caption: page.description,
-          imageUrl,
-        });
-      } catch (error) {
-        console.log("PAGE ERROR:", error);
-
-        pages.push({
-          pageNumber: page.pageNumber,
-          caption: page.description,
-          imageUrl: "",
-        });
-      }
-    }
-
-    chapter.pages = pages;
-    await Chapter.findByIdAndUpdate(
-      chapter._id,
-      {
-        pages,
-      },
-      {
-        new: true,
-      },
-    );
-
-    res.json({
-      message: "Pages generated successfully",
-      pages: chapter.pages,
-    });
-  } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      message: "Generation Failed",
     });
   }
 });
