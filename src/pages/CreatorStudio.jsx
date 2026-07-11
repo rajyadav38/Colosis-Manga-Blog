@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import "./CreatorStudio.css";
+import CanvasEditor from "../components/creator/CanvasEditor";
 export default function CreatorStudio({ theme }) {
   const { chapterId } = useParams();
 
@@ -9,6 +10,7 @@ export default function CreatorStudio({ theme }) {
   const [chapter, setChapter] = useState(null);
   const [pages, setPages] = useState([]);
   const [selectedPage, setSelectedPage] = useState(null);
+  const [selectedTool, setSelectedTool] = useState(null);
 
   // =============================
   // Load Chapter
@@ -126,10 +128,10 @@ export default function CreatorStudio({ theme }) {
             }}
           >
             {selectedPage ? (
-              <img
-                src={selectedPage.imageUrl}
-                alt=""
-                className="canvas-image"
+              <CanvasEditor
+                page={selectedPage}
+                selectedTool={selectedTool}
+                setSelectedTool={setSelectedTool}
               />
             ) : (
               <h3 style={{ color: "#777" }}>Manga Canvas</h3>
@@ -164,8 +166,13 @@ export default function CreatorStudio({ theme }) {
               Upload Page
             </button>
 
-            <button className="btn btn-secondary w-100 mb-2" disabled>
-              Speech Bubble
+            <button
+              className={`btn w-100 mb-2 ${
+                selectedTool === "bubble" ? "btn-warning" : "btn-secondary"
+              }`}
+              onClick={() => setSelectedTool("bubble")}
+            >
+              💬 Speech Bubble
             </button>
 
             <button className="btn btn-secondary w-100" disabled>
