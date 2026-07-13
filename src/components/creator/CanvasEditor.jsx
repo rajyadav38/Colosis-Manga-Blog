@@ -109,9 +109,16 @@ export default function CanvasEditor({
   };
 
   const handleStageClick = (e) => {
-    if (e.target !== e.target.getStage()) return;
+    // Don't add new elements when editing text
+    if (editingId) return;
+
+    const clickedOnTransformer = e.target.getClassName() === "Transformer";
+
+    if (clickedOnTransformer) return;
 
     const pos = stageRef.current.getPointerPosition();
+
+    if (!pos) return;
 
     if (selectedTool === "bubble") {
       addBubble(pos.x, pos.y);
