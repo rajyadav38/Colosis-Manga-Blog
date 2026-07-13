@@ -1,20 +1,24 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import "./CreatorStudio.css";
 import CanvasEditor from "../components/creator/CanvasEditor";
+
 export default function CreatorStudio({ theme }) {
   const { chapterId } = useParams();
 
   const API_URL = process.env.REACT_APP_API_URL;
 
   const [chapter, setChapter] = useState(null);
-  const [pages, setPages] = useState([]);
-  const [selectedPage, setSelectedPage] = useState(null);
-  const [selectedTool, setSelectedTool] = useState(null);
 
-  // =============================
-  // Load Chapter
-  // =============================
+  const [pages, setPages] = useState([]);
+
+  const [selectedPage, setSelectedPage] = useState(null);
+
+  const [selectedTool, setSelectedTool] = useState("select");
+
+  useEffect(() => {
+    fetchChapter();
+    // eslint-disable-next-line
+  }, []);
 
   const fetchChapter = async () => {
     try {
@@ -23,9 +27,10 @@ export default function CreatorStudio({ theme }) {
       const data = await res.json();
 
       setChapter(data);
+
       setPages(data.pages || []);
 
-      if (data.pages && data.pages.length > 0) {
+      if (data.pages?.length > 0) {
         setSelectedPage(data.pages[0]);
       }
     } catch (err) {
@@ -33,24 +38,16 @@ export default function CreatorStudio({ theme }) {
     }
   };
 
-  useEffect(() => {
-    fetchChapter();
-  }, []);
-
-  // =============================
-  // Upload Manga Page
-  // =============================
-
-  const handleUploadPage = async (e) => {
+  const uploadPage = async (e) => {
     const file = e.target.files[0];
 
     if (!file) return;
 
     try {
       const formData = new FormData();
+
       formData.append("image", file);
 
-      // Upload to Cloudinary
       const uploadRes = await fetch(`${API_URL}/api/stories/upload-page`, {
         method: "POST",
         body: formData,
@@ -58,16 +55,48 @@ export default function CreatorStudio({ theme }) {
 
       const uploadData = await uploadRes.json();
 
-      // Save inside chapter
-      await fetch(`${API_URL}/api/chapters/${chapterId}/add-page`, {
+      const res = await fetch(`${API_URL}/api/chapters/${chapterId}/add-page`, {
         method: "PUT",
+
         headers: {
           "Content-Type": "application/json",
         },
+
         body: JSON.stringify({
           imageUrl: uploadData.imageUrl,
         }),
       });
+
+      const updated = await res.json();
+
+      setChapter(updated);
+
+      setPages(updated.pages);
+
+      setSelectedPage(updated.pages[updated.pages.length - 1]);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const saveElements = async (elements) => {
+    if (!selectedPage) return;
+
+    try {
+      await fetch(
+        `${API_URL}/api/chapters/${chapterId}/page/${selectedPage.pageNumber}`,
+        {
+          method: "PUT",
+
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            elements,
+          }),
+        },
+      );
 
       fetchChapter();
     } catch (err) {
@@ -87,96 +116,129 @@ export default function CreatorStudio({ theme }) {
       <h2 className="fw-bold mb-4">🎨 Creator Studio</h2>
 
       <div className="row">
-        {/* ================= LEFT SIDEBAR ================= */}
+        {/* LEFT SIDEBAR */}
 
-        <div className="col-md-2">
+        <div className="col-lg-2">
           <div
-            className="p-3 rounded shadow"
+            className="rounded shadow p-3"
             style={{
               background: theme.card,
               minHeight: "80vh",
             }}
           >
-            <h5>Pages</h5>
+            <h5 className="mb-3">Pages</h5>
 
-            {pages.length === 0 ? (
-              <p className="text-muted">No pages uploaded</p>
-            ) : (
-              pages.map((page) => (
-                <img
-                  key={page.id || page.pageNumber}
-                  src={page.imageUrl}
-                  alt=""
-                  className="page-thumb"
-                  onClick={() => setSelectedPage(page)}
-                />
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* ================= CANVAS ================= */}
-
-        <div className="col-md-8">
-          <div
-            className="rounded shadow d-flex justify-content-center align-items-center"
-            style={{
-              background: "#222",
-              height: "80vh",
-              border: "2px dashed #555",
-              overflow: "hidden",
-            }}
-          >
-            {selectedPage ? (
-              <CanvasEditor
-                page={selectedPage}
-                selectedTool={selectedTool}
-                setSelectedTool={setSelectedTool}
+            <label className="btn btn-primary w-100 mb-3">
+              Upload Page
+              <input
+                hidden
+                type="file"
+                accept="image/*"
+                onChange={uploadPage}
               />
-            ) : (
-              <h3 style={{ color: "#777" }}>Manga Canvas</h3>
-            )}
+            </label>
+
+            {pages.map((page) => (
+              <img
+                key={page.pageNumber}
+                src={page.imageUrl}
+                alt=""
+                onClick={() => setSelectedPage(page)}
+                style={{
+                  width: "100%",
+                  marginBottom: 12,
+                  borderRadius: 10,
+                  cursor: "pointer",
+
+                  border:
+                    selectedPage?.pageNumber === page.pageNumber
+                      ? "3px solid #ff4d6d"
+                      : "2px solid transparent",
+                }}
+              />
+            ))}
           </div>
         </div>
 
-        {/* ================= TOOLS ================= */}
+        {/* CENTER */}
 
-        <div className="col-md-2">
+        <div className="col-lg-8">
+          {selectedPage ? (
+            <CanvasEditor
+              page={selectedPage}
+              chapterId={chapterId}
+              selectedTool={selectedTool}
+              saveElements={saveElements}
+            />
+          ) : (
+            <div
+              className="rounded d-flex justify-content-center align-items-center"
+              style={{
+                height: "80vh",
+                background: "#222",
+              }}
+            >
+              Upload your first manga page.
+            </div>
+          )}
+        </div>
+
+        {/* RIGHT TOOLBAR */}
+
+        <div className="col-lg-2">
           <div
-            className="p-3 rounded shadow"
+            className="rounded shadow p-3"
             style={{
               background: theme.card,
               minHeight: "80vh",
             }}
           >
-            <h5>Tools</h5>
-
-            <input
-              type="file"
-              id="uploadPage"
-              hidden
-              accept="image/*"
-              onChange={handleUploadPage}
-            />
+            <h5 className="mb-3">Tools</h5>
 
             <button
-              className="btn btn-primary w-100 mb-2"
-              onClick={() => document.getElementById("uploadPage").click()}
+              className={`btn w-100 mb-2 ${
+                selectedTool === "select"
+                  ? "btn-primary"
+                  : "btn-outline-primary"
+              }`}
+              onClick={() => setSelectedTool("select")}
             >
-              Upload Page
+              Select
             </button>
 
             <button
               className={`btn w-100 mb-2 ${
-                selectedTool === "bubble" ? "btn-warning" : "btn-secondary"
+                selectedTool === "bubble"
+                  ? "btn-primary"
+                  : "btn-outline-primary"
               }`}
               onClick={() => setSelectedTool("bubble")}
             >
               💬 Speech Bubble
             </button>
 
-            <button className="btn btn-secondary w-100" disabled>
-              Text
+            <button
+              className={`btn w-100 mb-2 ${
+                selectedTool === "text" ? "btn-primary" : "btn-outline-primary"
+              }`}
+              onClick={() => setSelectedTool("text")}
+            >
+              📝 Text
+            </button>
+
+            <hr />
+
+            <button
+              className="btn btn-success w-100"
+              onClick={() => {
+                const editor = window.creatorStudioSave;
+
+                if (editor) {
+                  editor();
+                }
+              }}
+            >
+              💾 Save
             </button>
           </div>
         </div>

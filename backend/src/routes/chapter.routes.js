@@ -20,6 +20,44 @@ router.post("/create", async (req, res) => {
   }
 });
 
+router.put("/:chapterId/page/:pageNumber/elements", async (req, res) => {
+  try {
+    const { chapterId, pageNumber } = req.params;
+    const { elements } = req.body;
+
+    const chapter = await Chapter.findById(chapterId);
+
+    if (!chapter) {
+      return res.status(404).json({
+        message: "Chapter not found",
+      });
+    }
+
+    const page = chapter.pages.find((p) => p.pageNumber === Number(pageNumber));
+
+    if (!page) {
+      return res.status(404).json({
+        message: "Page not found",
+      });
+    }
+
+    page.elements = elements;
+
+    await chapter.save();
+
+    res.json({
+      message: "Page saved successfully",
+      page,
+    });
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      message: "Server Error",
+    });
+  }
+});
+
 router.put("/:id/add-page", async (req, res) => {
   try {
     const chapter = await Chapter.findById(req.params.id);
