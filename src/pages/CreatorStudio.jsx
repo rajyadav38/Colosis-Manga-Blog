@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import CanvasEditor from "../components/creator/CanvasEditor";
-
+import PropertiesPanel from "../components/creator/PropertiesPanel";
 export default function CreatorStudio({ theme }) {
   const { chapterId } = useParams();
 
@@ -14,6 +14,8 @@ export default function CreatorStudio({ theme }) {
   const [selectedPage, setSelectedPage] = useState(null);
 
   const [selectedTool, setSelectedTool] = useState("select");
+  const [selectedElement, setSelectedElement] = useState(null);
+  const [selectedPageIndex, setSelectedPageIndex] = useState(null);
 
   useEffect(() => {
     fetchChapter();
@@ -103,6 +105,56 @@ export default function CreatorStudio({ theme }) {
       console.log(err);
     }
   };
+  const updateSelected = (changes) => {
+    if (!selectedElement) return;
+
+    setSelectedElement({
+      ...selectedElement,
+      ...changes,
+    });
+
+    const updatedPages = [...pages];
+
+    const pageIndex = updatedPages.findIndex(
+      (p) => p.pageNumber === selectedPage.pageNumber,
+    );
+
+    if (pageIndex === -1) return;
+
+    updatedPages[pageIndex].elements = updatedPages[pageIndex].elements.map(
+      (el) =>
+        el.id === selectedElement.id
+          ? {
+              ...el,
+              ...changes,
+            }
+          : el,
+    );
+
+    setPages(updatedPages);
+
+    setSelectedPage(updatedPages[pageIndex]);
+  };
+
+  const deleteSelected = () => {
+    if (!selectedElement) return;
+
+    const updatedPages = [...pages];
+
+    const pageIndex = updatedPages.findIndex(
+      (p) => p.pageNumber === selectedPage.pageNumber,
+    );
+
+    updatedPages[pageIndex].elements = updatedPages[pageIndex].elements.filter(
+      (el) => el.id !== selectedElement.id,
+    );
+
+    setPages(updatedPages);
+
+    setSelectedPage(updatedPages[pageIndex]);
+
+    setSelectedElement(null);
+  };
 
   return (
     <div
@@ -169,6 +221,8 @@ export default function CreatorStudio({ theme }) {
               chapterId={chapterId}
               selectedTool={selectedTool}
               saveElements={saveElements}
+              selectedElement={selectedElement}
+              setSelectedElement={setSelectedElement}
             />
           ) : (
             <div
@@ -186,11 +240,23 @@ export default function CreatorStudio({ theme }) {
         {/* RIGHT TOOLBAR */}
 
         <div className="col-lg-2">
+          <PropertiesPanel
+            selectedElement={selectedElement}
+            updateSelected={updateSelected}
+            deleteSelected={deleteSelected}
+            save={() => {
+              const fn = window.creatorStudioSave;
+
+              if (fn) {
+                fn();
+              }
+            }}
+          />
+
           <div
-            className="rounded shadow p-3"
+            className="rounded shadow p-3 mt-3"
             style={{
               background: theme.card,
-              minHeight: "80vh",
             }}
           >
             <h5 className="mb-3">Tools</h5>
@@ -214,31 +280,16 @@ export default function CreatorStudio({ theme }) {
               }`}
               onClick={() => setSelectedTool("bubble")}
             >
-              💬 Speech Bubble
+              💬 Bubble
             </button>
 
             <button
-              className={`btn w-100 mb-2 ${
+              className={`btn w-100 ${
                 selectedTool === "text" ? "btn-primary" : "btn-outline-primary"
               }`}
               onClick={() => setSelectedTool("text")}
             >
               📝 Text
-            </button>
-
-            <hr />
-
-            <button
-              className="btn btn-success w-100"
-              onClick={() => {
-                const editor = window.creatorStudioSave;
-
-                if (editor) {
-                  editor();
-                }
-              }}
-            >
-              💾 Save
             </button>
           </div>
         </div>

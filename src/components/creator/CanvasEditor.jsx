@@ -17,6 +17,8 @@ export default function CanvasEditor({
   chapterId,
   selectedTool,
   saveElements,
+  selectedElement,
+  setSelectedElement,
 }) {
   const stageRef = useRef();
   const transformerRef = useRef();
@@ -33,6 +35,14 @@ export default function CanvasEditor({
       setElements(page.elements || []);
     }
   }, [page]);
+
+  useEffect(() => {
+    if (!selectedElement) return;
+
+    setElements((prev) =>
+      prev.map((el) => (el.id === selectedElement.id ? selectedElement : el)),
+    );
+  }, [selectedElement]);
 
   // Register Save
   useEffect(() => {
@@ -63,11 +73,41 @@ export default function CanvasEditor({
       setElements((prev) => prev.filter((el) => el.id !== selectedId));
 
       setSelectedId(null);
+      setSelectedElement(null);
     };
 
     window.addEventListener("keydown", deleteElement);
 
     return () => window.removeEventListener("keydown", deleteElement);
+  }, [selectedId]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setSelectedElement(null);
+      return;
+    }
+
+    const element = elements.find((el) => el.id === selectedId);
+
+    if (element) {
+      setSelectedElement(element);
+    }
+  }, [selectedId, elements, setSelectedElement]);
+
+  useEffect(() => {
+    window.creatorStudioDelete = () => {
+      if (!selectedId) return;
+
+      setElements((prev) => prev.filter((el) => el.id !== selectedId));
+
+      setSelectedId(null);
+
+      setSelectedElement(null);
+    };
+
+    return () => {
+      delete window.creatorStudioDelete;
+    };
   }, [selectedId]);
 
   const addBubble = (x, y) => {
@@ -103,9 +143,24 @@ export default function CanvasEditor({
   };
 
   const updateElement = (id, values) => {
-    setElements((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, ...values } : el)),
-    );
+    setElements((prev) => {
+      const updated = prev.map((el) =>
+        el.id === id
+          ? {
+              ...el,
+              ...values,
+            }
+          : el,
+      );
+
+      const selected = updated.find((el) => el.id === id);
+
+      if (selected) {
+        setSelectedElement(selected);
+      }
+
+      return updated;
+    });
   };
 
   const handleStageClick = (e) => {
@@ -131,6 +186,7 @@ export default function CanvasEditor({
     }
 
     setSelectedId(null);
+    setSelectedElement(null);
   };
 
   const currentElement = elements.find((el) => el.id === editingId);
@@ -179,8 +235,13 @@ export default function CanvasEditor({
                     element={element}
                     selected={selectedId === element.id}
                     nodeRef={selectedNodeRef}
-                    onClick={() => setSelectedId(element.id)}
-                    onDblClick={() => setEditingId(element.id)}
+                    onClick={() => {
+                      setSelectedId(element.id);
+                      setSelectedElement(element);
+                    }}
+                    onDblClick={() => {
+                      setSelectedId(element.id);
+                    }}
                     onDragEnd={(e) =>
                       updateElement(element.id, {
                         x: e.target.x(),
@@ -212,8 +273,13 @@ export default function CanvasEditor({
                     element={element}
                     selected={selectedId === element.id}
                     nodeRef={selectedNodeRef}
-                    onClick={() => setSelectedId(element.id)}
-                    onDblClick={() => setEditingId(element.id)}
+                    onClick={() => {
+                      setSelectedId(element.id);
+                      setSelectedElement(element);
+                    }}
+                    onDblClick={() => {
+                      setSelectedId(element.id);
+                    }}
                     onDragEnd={(e) =>
                       updateElement(element.id, {
                         x: e.target.x(),
@@ -258,7 +324,7 @@ export default function CanvasEditor({
         </Stage>
 
         {/* TEXT EDITOR */}
-        {editingId && currentElement && (
+        {/* {editingId && currentElement && (
           <div
             style={{
               position: "fixed",
@@ -313,7 +379,7 @@ export default function CanvasEditor({
               </button>
             </div>
           </div>
-        )}
+        )} */}
       </div>
     </>
   );
