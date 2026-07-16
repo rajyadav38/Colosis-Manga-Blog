@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import CanvasEditor from "../components/creator/CanvasEditor";
 import PropertiesPanel from "../components/creator/PropertiesPanel";
+import "../styles/CreatorStudio.css";
 export default function CreatorStudio({ theme }) {
   const { chapterId } = useParams();
 
@@ -158,19 +159,19 @@ export default function CreatorStudio({ theme }) {
 
   return (
     <div
-      className="container-fluid py-4"
+      className="creator-studio"
       style={{
         background: theme.bg,
         minHeight: "100vh",
         color: theme.text,
       }}
     >
-      <h2 className="fw-bold mb-4">🎨 Creator Studio</h2>
+      <h2 className="creator-title">🎨 Creator Studio</h2>
 
-      <div className="row">
+      <div className="creator-layout">
         {/* LEFT SIDEBAR */}
 
-        <div className="col-lg-2">
+        <div className="creator-panel">
           <div
             className="rounded shadow p-3"
             style={{
@@ -178,9 +179,9 @@ export default function CreatorStudio({ theme }) {
               minHeight: "80vh",
             }}
           >
-            <h5 className="mb-3">Pages</h5>
+            <h4 className="pages-title">Chapter Pages</h4>
 
-            <label className="btn btn-primary w-100 mb-3">
+            <label className="btn btn-primary upload-btn">
               Upload Page
               <input
                 hidden
@@ -214,16 +215,44 @@ export default function CreatorStudio({ theme }) {
 
         {/* CENTER */}
 
-        <div className="col-lg-8">
+        <div className="canvas-panel">
+          <div className="canvas-toolbar">
+            <button
+              className={`tool-btn ${
+                selectedTool === "select" ? "active" : ""
+              }`}
+              onClick={() => setSelectedTool("select")}
+            >
+              🖱 Select
+            </button>
+
+            <button
+              className={`tool-btn ${
+                selectedTool === "bubble" ? "active" : ""
+              }`}
+              onClick={() => setSelectedTool("bubble")}
+            >
+              💬 Bubble
+            </button>
+
+            <button
+              className={`tool-btn ${selectedTool === "text" ? "active" : ""}`}
+              onClick={() => setSelectedTool("text")}
+            >
+              📝 Text
+            </button>
+          </div>
           {selectedPage ? (
-            <CanvasEditor
-              page={selectedPage}
-              chapterId={chapterId}
-              selectedTool={selectedTool}
-              saveElements={saveElements}
-              selectedElement={selectedElement}
-              setSelectedElement={setSelectedElement}
-            />
+            <div className="canvas-workspace">
+              <CanvasEditor
+                page={selectedPage}
+                chapterId={chapterId}
+                selectedTool={selectedTool}
+                saveElements={saveElements}
+                selectedElement={selectedElement}
+                setSelectedElement={setSelectedElement}
+              />
+            </div>
           ) : (
             <div
               className="rounded d-flex justify-content-center align-items-center"
@@ -239,7 +268,7 @@ export default function CreatorStudio({ theme }) {
 
         {/* RIGHT TOOLBAR */}
 
-        <div className="col-lg-2">
+        <div className="creator-panel">
           <PropertiesPanel
             selectedElement={selectedElement}
             updateSelected={updateSelected}
@@ -252,46 +281,6 @@ export default function CreatorStudio({ theme }) {
               }
             }}
           />
-
-          <div
-            className="rounded shadow p-3 mt-3"
-            style={{
-              background: theme.card,
-            }}
-          >
-            <h5 className="mb-3">Tools</h5>
-
-            <button
-              className={`btn w-100 mb-2 ${
-                selectedTool === "select"
-                  ? "btn-primary"
-                  : "btn-outline-primary"
-              }`}
-              onClick={() => setSelectedTool("select")}
-            >
-              Select
-            </button>
-
-            <button
-              className={`btn w-100 mb-2 ${
-                selectedTool === "bubble"
-                  ? "btn-primary"
-                  : "btn-outline-primary"
-              }`}
-              onClick={() => setSelectedTool("bubble")}
-            >
-              💬 Bubble
-            </button>
-
-            <button
-              className={`btn w-100 ${
-                selectedTool === "text" ? "btn-primary" : "btn-outline-primary"
-              }`}
-              onClick={() => setSelectedTool("text")}
-            >
-              📝 Text
-            </button>
-          </div>
         </div>
       </div>
     </div>
