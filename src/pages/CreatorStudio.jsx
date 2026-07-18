@@ -216,38 +216,13 @@ export default function CreatorStudio({ theme }) {
         {/* CENTER */}
 
         <div className="canvas-panel">
-          <div className="canvas-toolbar">
-            <button
-              className={`tool-btn ${
-                selectedTool === "select" ? "active" : ""
-              }`}
-              onClick={() => setSelectedTool("select")}
-            >
-              🖱 Select
-            </button>
-
-            <button
-              className={`tool-btn ${
-                selectedTool === "bubble" ? "active" : ""
-              }`}
-              onClick={() => setSelectedTool("bubble")}
-            >
-              💬 Bubble
-            </button>
-
-            <button
-              className={`tool-btn ${selectedTool === "text" ? "active" : ""}`}
-              onClick={() => setSelectedTool("text")}
-            >
-              📝 Text
-            </button>
-          </div>
           {selectedPage ? (
             <div className="canvas-workspace">
               <CanvasEditor
                 page={selectedPage}
-                chapterId={chapterId}
+                chapterId={chapter._id}
                 selectedTool={selectedTool}
+                setSelectedTool={setSelectedTool}
                 saveElements={saveElements}
                 selectedElement={selectedElement}
                 setSelectedElement={setSelectedElement}

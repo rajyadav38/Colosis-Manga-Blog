@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import useImage from "use-image";
-import { Stage, Layer, Image, Transformer } from "react-konva";
+import { Stage, Layer, Image, Transformer, Group } from "react-konva";
 import SpeechBubble from "./SpeechBubble";
 import CanvasText from "./CanvasText";
+import CanvasStage from "./CanvasStage";
 
 function PageImage({ url }) {
   const [image] = useImage(url);
@@ -16,6 +17,7 @@ export default function CanvasEditor({
   page,
   chapterId,
   selectedTool,
+  setSelectedTool,
   saveElements,
   selectedElement,
   setSelectedElement,
@@ -27,6 +29,21 @@ export default function CanvasEditor({
   const [elements, setElements] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
   const [editingId, setEditingId] = useState(null);
+  const [scale, setScale] = useState(1);
+  const PAGE_WIDTH = 800;
+  const PAGE_HEIGHT = 1100;
+
+  const WORKSPACE_WIDTH = 1000;
+  const WORKSPACE_HEIGHT = 1250;
+
+  const defaultCanvasPosition = {
+    x: (WORKSPACE_WIDTH - PAGE_WIDTH) / 2,
+    y: (WORKSPACE_HEIGHT - PAGE_HEIGHT) / 2,
+  };
+
+  const [canvasPosition, setCanvasPosition] = useState(defaultCanvasPosition);
+
+  const [isPanning, setIsPanning] = useState(false);
 
   const selectedNodeRef = useRef();
 
@@ -110,6 +127,28 @@ export default function CanvasEditor({
     };
   }, [selectedId]);
 
+  useEffect(() => {
+    const down = (e) => {
+      if (e.code === "Space") {
+        setIsPanning(true);
+      }
+    };
+
+    const up = (e) => {
+      if (e.code === "Space") {
+        setIsPanning(false);
+      }
+    };
+
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+    };
+  }, []);
+
   const addBubble = (x, y) => {
     setElements((prev) => [
       ...prev,
@@ -171,7 +210,14 @@ export default function CanvasEditor({
 
     if (clickedOnTransformer) return;
 
-    const pos = stageRef.current.getPointerPosition();
+    const pointer = stageRef.current.getPointerPosition();
+
+    if (!pointer) return;
+
+    const pos = {
+      x: (pointer.x - canvasPosition.x) / scale,
+      y: (pointer.y - canvasPosition.y) / scale,
+    };
 
     if (!pos) return;
 
@@ -200,186 +246,145 @@ export default function CanvasEditor({
   const stopEditing = () => {
     setEditingId(null);
   };
+  const handleWheel = (e) => {
+    e.evt.preventDefault();
+
+    const scaleBy = 1.05;
+
+    const oldScale = scale;
+
+    const pointer = stageRef.current.getPointerPosition();
+
+    if (!pointer) return;
+
+    const mousePoint = {
+      x: (pointer.x - canvasPosition.x) / oldScale,
+      y: (pointer.y - canvasPosition.y) / oldScale,
+    };
+
+    const direction = e.evt.deltaY > 0 ? -1 : 1;
+
+    let newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+    newScale = Math.max(0.3, Math.min(4, newScale));
+
+    setScale(newScale);
+
+    setCanvasPosition({
+      x: pointer.x - mousePoint.x * newScale,
+      y: pointer.y - mousePoint.y * newScale,
+    });
+  };
+  const zoom = (direction) => {
+    const oldScale = scale;
+
+    const newScale = Math.max(0.3, Math.min(4, oldScale + direction * 0.1));
+
+    const center = {
+      x: WORKSPACE_WIDTH / 2,
+      y: WORKSPACE_HEIGHT / 2,
+    };
+
+    const point = {
+      x: (center.x - canvasPosition.x) / oldScale,
+      y: (center.y - canvasPosition.y) / oldScale,
+    };
+
+    setScale(newScale);
+
+    setCanvasPosition({
+      x: center.x - point.x * newScale,
+      y: center.y - point.y * newScale,
+    });
+  };
+  const zoomIn = () => zoom(1);
+
+  const zoomOut = () => zoom(-1);
+
+  const fitScreen = () => {
+    const padding = 80;
+
+    const scaleX = (WORKSPACE_WIDTH - padding) / PAGE_WIDTH;
+
+    const scaleY = (WORKSPACE_HEIGHT - padding) / PAGE_HEIGHT;
+
+    const newScale = Math.min(scaleX, scaleY);
+
+    setScale(newScale);
+
+    setCanvasPosition({
+      x: (WORKSPACE_WIDTH - PAGE_WIDTH * newScale) / 2,
+
+      y: (WORKSPACE_HEIGHT - PAGE_HEIGHT * newScale) / 2,
+    });
+  };
 
   return (
     <>
       <div
         style={{
           display: "flex",
-          justifyContent: "center",
+          flexDirection: "column",
+          alignItems: "center",
           width: "100%",
-          position: "relative",
+          gap: "15px",
         }}
       >
-        <Stage
-          ref={stageRef}
-          width={800}
-          height={1100}
-          style={{
-            background: "#222",
-            borderRadius: 12,
-            border: "2px solid #444",
-          }}
-          onMouseDown={handleStageClick}
-        >
-          <Layer>
-            {/* Manga Page */}
-            <PageImage url={page.imageUrl} />
-
-            {/* Elements */}
-            {elements.map((element) => {
-              if (element.type === "bubble") {
-                return (
-                  <SpeechBubble
-                    key={element.id}
-                    element={element}
-                    selected={selectedId === element.id}
-                    nodeRef={selectedNodeRef}
-                    onClick={() => {
-                      setSelectedId(element.id);
-                      setSelectedElement(element);
-                    }}
-                    onDblClick={() => {
-                      setSelectedId(element.id);
-                    }}
-                    onDragEnd={(e) =>
-                      updateElement(element.id, {
-                        x: e.target.x(),
-                        y: e.target.y(),
-                      })
-                    }
-                    onTransformEnd={(e) => {
-                      const node = e.target;
-
-                      updateElement(element.id, {
-                        x: node.x(),
-                        y: node.y(),
-                        width: Math.max(120, node.scaleX() * element.width),
-                        height: Math.max(80, node.scaleY() * element.height),
-                        rotation: node.rotation(),
-                      });
-
-                      node.scaleX(1);
-                      node.scaleY(1);
-                    }}
-                  />
-                );
-              }
-
-              if (element.type === "text") {
-                return (
-                  <CanvasText
-                    key={element.id}
-                    element={element}
-                    selected={selectedId === element.id}
-                    nodeRef={selectedNodeRef}
-                    onClick={() => {
-                      setSelectedId(element.id);
-                      setSelectedElement(element);
-                    }}
-                    onDblClick={() => {
-                      setSelectedId(element.id);
-                    }}
-                    onDragEnd={(e) =>
-                      updateElement(element.id, {
-                        x: e.target.x(),
-                        y: e.target.y(),
-                      })
-                    }
-                    onTransformEnd={(e) => {
-                      const node = e.target;
-
-                      updateElement(element.id, {
-                        x: node.x(),
-                        y: node.y(),
-                        fontSize: element.fontSize * node.scaleX(),
-                        rotation: node.rotation(),
-                      });
-
-                      node.scaleX(1);
-                      node.scaleY(1);
-                    }}
-                  />
-                );
-              }
-
-              return null;
-            })}
-            <Transformer
-              ref={transformerRef}
-              rotateEnabled
-              keepRatio={false}
-              enabledAnchors={[
-                "top-left",
-                "top-center",
-                "top-right",
-                "middle-left",
-                "middle-right",
-                "bottom-left",
-                "bottom-center",
-                "bottom-right",
-              ]}
-            />
-          </Layer>
-        </Stage>
-
-        {/* TEXT EDITOR */}
-        {/* {editingId && currentElement && (
-          <div
-            style={{
-              position: "fixed",
-              top: 120,
-              left: "50%",
-              transform: "translateX(-50%)",
-              zIndex: 9999,
-              background: "#202020",
-              padding: 20,
-              borderRadius: 12,
-              width: 420,
-              boxShadow: "0 10px 30px rgba(0,0,0,.4)",
-            }}
-          >
-            <h5
-              style={{
-                color: "white",
-                marginBottom: 15,
-              }}
+        <div className="editor-toolbar">
+          <div className="toolbar-left">
+            <button
+              className={selectedTool === "select" ? "active" : ""}
+              onClick={() => setSelectedTool("select")}
             >
-              Edit Dialogue
-            </h5>
+              🖱 Select
+            </button>
 
-            <textarea
-              ref={textareaRef}
-              rows={5}
-              value={currentElement.text}
-              onChange={(e) => updateEditingText(e.target.value)}
-              style={{
-                width: "100%",
-                resize: "none",
-                borderRadius: 10,
-                padding: 10,
-                fontSize: 18,
-              }}
-            />
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: 10,
-                marginTop: 15,
-              }}
+            <button
+              className={selectedTool === "bubble" ? "active" : ""}
+              onClick={() => setSelectedTool("bubble")}
             >
-              <button className="btn btn-secondary" onClick={stopEditing}>
-                Cancel
-              </button>
+              💬 Bubble
+            </button>
 
-              <button className="btn btn-success" onClick={stopEditing}>
-                Save
-              </button>
-            </div>
+            <button
+              className={selectedTool === "text" ? "active" : ""}
+              onClick={() => setSelectedTool("text")}
+            >
+              📝 Text
+            </button>
           </div>
-        )} */}
+
+          <div className="toolbar-divider"></div>
+
+          <div className="toolbar-right">
+            <button onClick={zoomOut}>➖</button>
+
+            <span className="zoom-value">{Math.round(scale * 100)}%</span>
+
+            <button onClick={zoomIn}>➕</button>
+
+            <button onClick={fitScreen}>Fit</button>
+          </div>
+        </div>
+        <div className={`canvas-paper ${isPanning ? "panning" : ""}`}>
+          <CanvasStage
+            page={page}
+            elements={elements}
+            stageRef={stageRef}
+            transformerRef={transformerRef}
+            selectedNodeRef={selectedNodeRef}
+            selectedId={selectedId}
+            setSelectedId={setSelectedId}
+            setSelectedElement={setSelectedElement}
+            updateElement={updateElement}
+            handleStageClick={handleStageClick}
+            handleWheel={handleWheel}
+            scale={scale}
+            isPanning={isPanning}
+            canvasPosition={canvasPosition}
+            setCanvasPosition={setCanvasPosition}
+          />
+        </div>
       </div>
     </>
   );
