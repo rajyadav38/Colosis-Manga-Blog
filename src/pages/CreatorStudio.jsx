@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import CanvasEditor from "../components/creator/CanvasEditor";
 import PropertiesPanel from "../components/creator/PropertiesPanel";
 import "../styles/CreatorStudio.css";
+import LayersPanel from "../components/creator/LayersPanel";
 export default function CreatorStudio({ theme }) {
   const { chapterId } = useParams();
 
@@ -17,6 +18,9 @@ export default function CreatorStudio({ theme }) {
   const [selectedTool, setSelectedTool] = useState("select");
   const [selectedElement, setSelectedElement] = useState(null);
   const [selectedPageIndex, setSelectedPageIndex] = useState(null);
+  const [editorElements, setEditorElements] = useState([]);
+  const [editorSelectedId, setEditorSelectedId] = useState(null);
+  const [activeSidebarTab, setActiveSidebarTab] = useState("properties");
 
   useEffect(() => {
     fetchChapter();
@@ -226,6 +230,8 @@ export default function CreatorStudio({ theme }) {
                 saveElements={saveElements}
                 selectedElement={selectedElement}
                 setSelectedElement={setSelectedElement}
+                onElementsChange={setEditorElements}
+                onSelectionChange={setEditorSelectedId}
               />
             </div>
           ) : (
@@ -241,21 +247,40 @@ export default function CreatorStudio({ theme }) {
           )}
         </div>
 
-        {/* RIGHT TOOLBAR */}
-
         <div className="creator-panel">
-          <PropertiesPanel
-            selectedElement={selectedElement}
-            updateSelected={updateSelected}
-            deleteSelected={deleteSelected}
-            save={() => {
-              const fn = window.creatorStudioSave;
+          <div className="sidebar-tabs">
+            <button
+              className={activeSidebarTab === "properties" ? "active" : ""}
+              onClick={() => setActiveSidebarTab("properties")}
+            >
+              Properties
+            </button>
 
-              if (fn) {
-                fn();
-              }
-            }}
-          />
+            <button
+              className={activeSidebarTab === "layers" ? "active" : ""}
+              onClick={() => setActiveSidebarTab("layers")}
+            >
+              Layers
+            </button>
+          </div>
+
+          {activeSidebarTab === "properties" ? (
+            <PropertiesPanel
+              selectedElement={selectedElement}
+              updateSelected={updateSelected}
+              deleteSelected={deleteSelected}
+              save={() => {
+                const fn = window.creatorStudioSave;
+
+                if (fn) fn();
+              }}
+            />
+          ) : (
+            <LayersPanel
+              elements={editorElements}
+              selectedId={editorSelectedId}
+            />
+          )}
         </div>
       </div>
     </div>

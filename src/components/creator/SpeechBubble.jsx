@@ -10,37 +10,44 @@ export default function SpeechBubble({
   onTransformEnd,
   onDblClick,
 }) {
+  const width = element.width;
+  const height = element.height;
+
   return (
     <Group
       ref={selected ? nodeRef : null}
       x={element.x}
       y={element.y}
-      draggable
       rotation={element.rotation}
+      draggable
       onClick={onClick}
       onTap={onClick}
       onDragEnd={onDragEnd}
       onTransformEnd={onTransformEnd}
       onDblClick={onDblClick}
     >
+      {/* Bubble */}
       <Ellipse
-        width={element.width}
-        height={element.height}
+        x={width / 2}
+        y={height / 2}
+        radiusX={width / 2}
+        radiusY={height / 2}
         fill="white"
         stroke={selected ? "#ff4d6d" : "black"}
         strokeWidth={selected ? 4 : 2}
       />
 
+      {/* Tail */}
       <Line
         points={[
-          element.width * 0.35,
-          element.height,
+          width * 0.42,
+          height,
 
-          element.width * 0.45,
-          element.height + 28,
+          width * 0.5,
+          height + 28,
 
-          element.width * 0.55,
-          element.height,
+          width * 0.58,
+          height,
         ]}
         closed
         fill="white"
@@ -48,15 +55,19 @@ export default function SpeechBubble({
         strokeWidth={2}
       />
 
+      {/* Text */}
       <Text
+        x={15}
+        y={15}
+        width={width - 30}
+        height={height - 30}
         text={element.text}
-        width={element.width}
-        height={element.height}
+        fontSize={element.fontSize}
+        fontFamily="Anime Ace"
+        fill="black"
         align="center"
         verticalAlign="middle"
-        fontSize={element.fontSize}
-        fill="black"
-        padding={15}
+        listening={false}
       />
     </Group>
   );

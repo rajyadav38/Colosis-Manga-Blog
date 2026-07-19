@@ -4,7 +4,8 @@ import { Stage, Layer, Image, Transformer, Group } from "react-konva";
 import SpeechBubble from "./SpeechBubble";
 import CanvasText from "./CanvasText";
 import CanvasStage from "./CanvasStage";
-
+import useHistory from "./hooks/useHistory";
+import LayersPanel from "./LayersPanel";
 function PageImage({ url }) {
   const [image] = useImage(url);
 
@@ -21,17 +22,30 @@ export default function CanvasEditor({
   saveElements,
   selectedElement,
   setSelectedElement,
+  onElementsChange,
+  onSelectionChange,
 }) {
   const stageRef = useRef();
   const transformerRef = useRef();
   const textareaRef = useRef();
 
-  const [elements, setElements] = useState([]);
+  const {
+    state: elements,
+    set: setElements,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = useHistory([]);
+  useEffect(() => {
+    onElementsChange?.(elements);
+  }, [elements, onElementsChange]);
   const [selectedId, setSelectedId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [scale, setScale] = useState(1);
   const PAGE_WIDTH = 800;
   const PAGE_HEIGHT = 1100;
+  const clipboardRef = useRef(null);
 
   const WORKSPACE_WIDTH = 1000;
   const WORKSPACE_HEIGHT = 1250;
@@ -110,6 +124,9 @@ export default function CanvasEditor({
       setSelectedElement(element);
     }
   }, [selectedId, elements, setSelectedElement]);
+  useEffect(() => {
+    onSelectionChange?.(selectedId);
+  }, [selectedId, onSelectionChange]);
 
   useEffect(() => {
     window.creatorStudioDelete = () => {
@@ -149,6 +166,59 @@ export default function CanvasEditor({
     };
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.ctrlKey && e.key.toLowerCase() === "z" && !e.shiftKey) {
+        e.preventDefault();
+        undo();
+      }
+
+      if (
+        (e.ctrlKey && e.key.toLowerCase() === "y") ||
+        (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "z")
+      ) {
+        e.preventDefault();
+        redo();
+      }
+      // Copy
+      if (e.ctrlKey && e.key.toLowerCase() === "c") {
+        e.preventDefault();
+        copySelectedElement();
+      }
+
+      // Paste
+      if (e.ctrlKey && e.key.toLowerCase() === "v") {
+        e.preventDefault();
+        pasteElement();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [undo, redo]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't intercept typing inside inputs
+      if (
+        document.activeElement.tagName === "INPUT" ||
+        document.activeElement.tagName === "TEXTAREA"
+      ) {
+        return;
+      }
+
+      if (e.key === "Delete") {
+        e.preventDefault();
+        deleteSelectedElement();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedId, elements]);
+
   const addBubble = (x, y) => {
     setElements((prev) => [
       ...prev,
@@ -182,24 +252,22 @@ export default function CanvasEditor({
   };
 
   const updateElement = (id, values) => {
-    setElements((prev) => {
-      const updated = prev.map((el) =>
-        el.id === id
-          ? {
-              ...el,
-              ...values,
-            }
-          : el,
-      );
+    const updated = elements.map((el) =>
+      el.id === id
+        ? {
+            ...el,
+            ...values,
+          }
+        : el,
+    );
 
-      const selected = updated.find((el) => el.id === id);
+    setElements(updated);
 
-      if (selected) {
-        setSelectedElement(selected);
-      }
+    const selected = updated.find((el) => el.id === id);
 
-      return updated;
-    });
+    if (selected) {
+      setSelectedElement(selected);
+    }
   };
 
   const handleStageClick = (e) => {
@@ -319,6 +387,45 @@ export default function CanvasEditor({
     });
   };
 
+  const deleteSelectedElement = () => {
+    if (!selectedId) return;
+
+    const updated = elements.filter((el) => el.id !== selectedId);
+
+    setElements(updated);
+
+    setSelectedId(null);
+    setSelectedElement(null);
+  };
+  const copySelectedElement = () => {
+    if (!selectedId) return;
+
+    const element = elements.find((el) => el.id === selectedId);
+
+    if (!element) return;
+
+    clipboardRef.current = structuredClone(element);
+  };
+  const pasteElement = () => {
+    if (!clipboardRef.current) return;
+
+    const copied = clipboardRef.current;
+
+    const newElement = {
+      ...structuredClone(copied),
+      id: crypto.randomUUID(),
+      x: copied.x + 20,
+      y: copied.y + 20,
+    };
+
+    const updated = [...elements, newElement];
+
+    setElements(updated);
+
+    setSelectedId(newElement.id);
+    setSelectedElement(newElement);
+  };
+
   return (
     <>
       <div
@@ -364,6 +471,24 @@ export default function CanvasEditor({
             <button onClick={zoomIn}>➕</button>
 
             <button onClick={fitScreen}>Fit</button>
+            <button onClick={undo} disabled={!canUndo}>
+              Undo
+            </button>
+
+            <button onClick={redo} disabled={!canRedo}>
+              Redo
+            </button>
+
+            <button disabled={!selectedId} onClick={deleteSelectedElement}>
+              🗑 Delete
+            </button>
+            <button disabled={!selectedId} onClick={copySelectedElement}>
+              Copy
+            </button>
+
+            <button disabled={!clipboardRef.current} onClick={pasteElement}>
+              Paste
+            </button>
           </div>
         </div>
         <div className={`canvas-paper ${isPanning ? "panning" : ""}`}>
