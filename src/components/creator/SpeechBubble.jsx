@@ -7,6 +7,7 @@ export default function SpeechBubble({
   nodeRef,
   onClick,
   onDragEnd,
+  draggable,
   onTransformEnd,
   onDblClick,
 }) {
@@ -19,7 +20,7 @@ export default function SpeechBubble({
       x={element.x}
       y={element.y}
       rotation={element.rotation}
-      draggable
+      draggable={draggable}
       onClick={onClick}
       onTap={onClick}
       onDragEnd={onDragEnd}

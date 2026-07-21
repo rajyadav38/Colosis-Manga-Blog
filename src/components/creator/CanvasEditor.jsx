@@ -145,6 +145,38 @@ export default function CanvasEditor({
   }, [selectedId]);
 
   useEffect(() => {
+    window.creatorStudioToggleVisibility = toggleVisibility;
+
+    return () => {
+      delete window.creatorStudioToggleVisibility;
+    };
+  }, []);
+
+  useEffect(() => {
+    window.creatorStudioToggleLock = toggleLock;
+
+    return () => {
+      delete window.creatorStudioToggleLock;
+    };
+  }, []);
+
+  useEffect(() => {
+    window.creatorStudioRenameLayer = renameLayer;
+
+    return () => {
+      delete window.creatorStudioRenameLayer;
+    };
+  }, []);
+
+  useEffect(() => {
+    window.creatorStudioReorderLayers = reorderLayers;
+
+    return () => {
+      delete window.creatorStudioReorderLayers;
+    };
+  }, []);
+
+  useEffect(() => {
     const down = (e) => {
       if (e.code === "Space") {
         setIsPanning(true);
@@ -210,6 +242,9 @@ export default function CanvasEditor({
 
       if (e.key === "Delete") {
         e.preventDefault();
+        const selected = elements.find((el) => el.id === selectedId);
+
+        if (selected?.locked) return;
         deleteSelectedElement();
       }
     };
@@ -268,6 +303,60 @@ export default function CanvasEditor({
     if (selected) {
       setSelectedElement(selected);
     }
+  };
+  const toggleVisibility = (id) => {
+    setElements((prev) =>
+      prev.map((el) =>
+        el.id === id
+          ? {
+              ...el,
+              visible: el.visible === false,
+            }
+          : el,
+      ),
+    );
+  };
+  const toggleLock = (id) => {
+    setElements((prev) =>
+      prev.map((el) =>
+        el.id === id
+          ? {
+              ...el,
+              locked: !el.locked,
+            }
+          : el,
+      ),
+    );
+  };
+  const renameLayer = (id, name) => {
+    setElements((prev) =>
+      prev.map((el) =>
+        el.id === id
+          ? {
+              ...el,
+              name,
+            }
+          : el,
+      ),
+    );
+  };
+
+  const reorderLayers = (activeId, overId) => {
+    if (activeId === overId) return;
+
+    setElements((prev) => {
+      const oldIndex = prev.findIndex((el) => el.id === activeId);
+      const newIndex = prev.findIndex((el) => el.id === overId);
+
+      if (oldIndex === -1 || newIndex === -1) return prev;
+
+      const updated = [...prev];
+
+      const [moved] = updated.splice(oldIndex, 1);
+      updated.splice(newIndex, 0, moved);
+
+      return updated;
+    });
   };
 
   const handleStageClick = (e) => {

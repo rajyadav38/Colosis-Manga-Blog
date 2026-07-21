@@ -279,6 +279,16 @@ export default function CreatorStudio({ theme }) {
             <LayersPanel
               elements={editorElements}
               selectedId={editorSelectedId}
+              toggleVisibility={(id) =>
+                window.creatorStudioToggleVisibility?.(id)
+              }
+              toggleLock={(id) => window.creatorStudioToggleLock?.(id)}
+              renameLayer={(id, name) =>
+                window.creatorStudioRenameLayer?.(id, name)
+              }
+              reorderLayers={(activeId, overId) =>
+                window.creatorStudioReorderLayers?.(activeId, overId)
+              }
             />
           )}
         </div>

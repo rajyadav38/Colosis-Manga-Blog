@@ -38,7 +38,7 @@ const chapterSchema = new mongoose.Schema(
 
         elements: [
           {
-            id: String, // unique id for React rendering
+            id: String,
 
             type: {
               type: String,
@@ -46,6 +46,22 @@ const chapterSchema = new mongoose.Schema(
             },
 
             text: String,
+
+            // 👇 ADD THESE
+            name: {
+              type: String,
+              default: "",
+            },
+
+            visible: {
+              type: Boolean,
+              default: true,
+            },
+
+            locked: {
+              type: Boolean,
+              default: false,
+            },
 
             x: Number,
             y: Number,

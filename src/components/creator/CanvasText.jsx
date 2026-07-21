@@ -7,6 +7,7 @@ export default function CanvasText({
   nodeRef,
   onClick,
   onDragEnd,
+  draggable,
   onTransformEnd,
   onDblClick,
 }) {
@@ -15,7 +16,7 @@ export default function CanvasText({
       ref={selected ? nodeRef : null}
       x={element.x}
       y={element.y}
-      draggable
+      draggable={draggable}
       rotation={element.rotation}
       text={element.text}
       fontSize={element.fontSize}

@@ -96,84 +96,104 @@ export default function CanvasStage({
           />
         </Group>
         {/* Elements */}
-        {elements.map((element) => {
-          if (element.type === "bubble") {
-            return (
-              <SpeechBubble
-                key={element.id}
-                element={element}
-                selected={selectedId === element.id}
-                nodeRef={selectedNodeRef}
-                onClick={() => {
-                  setSelectedId(element.id);
-                  setSelectedElement(element);
-                }}
-                onDblClick={() => {
-                  setSelectedId(element.id);
-                }}
-                onDragEnd={(e) =>
-                  updateElement(element.id, {
-                    x: e.target.x(),
-                    y: e.target.y(),
-                  })
-                }
-                onTransformEnd={(e) => {
-                  const node = e.target;
+        {elements
+          .filter((element) => element.visible !== false)
+          .map((element) => {
+            if (element.type === "bubble") {
+              return (
+                <SpeechBubble
+                  key={element.id}
+                  element={element}
+                  selected={selectedId === element.id}
+                  nodeRef={selectedNodeRef}
+                  draggable={!element.locked}
+                  onClick={() => {
+                    if (element.locked) return;
 
-                  updateElement(element.id, {
-                    x: node.x(),
-                    y: node.y(),
-                    width: Math.max(120, element.width * node.scaleX()),
-                    height: Math.max(80, element.height * node.scaleY()),
-                    rotation: node.rotation(),
-                  });
+                    setSelectedId(element.id);
+                    setSelectedElement(element);
+                  }}
+                  onDblClick={() => {
+                    if (element.locked) return;
 
-                  node.scaleX(1);
-                  node.scaleY(1);
-                }}
-              />
-            );
-          }
+                    setSelectedId(element.id);
+                  }}
+                  onDragEnd={(e) => {
+                    if (element.locked) return;
 
-          if (element.type === "text") {
-            return (
-              <CanvasText
-                key={element.id}
-                element={element}
-                selected={selectedId === element.id}
-                nodeRef={selectedNodeRef}
-                onClick={() => {
-                  setSelectedId(element.id);
-                  setSelectedElement(element);
-                }}
-                onDblClick={() => {
-                  setSelectedId(element.id);
-                }}
-                onDragEnd={(e) =>
-                  updateElement(element.id, {
-                    x: e.target.x(),
-                    y: e.target.y(),
-                  })
-                }
-                onTransformEnd={(e) => {
-                  const node = e.target;
+                    updateElement(element.id, {
+                      x: e.target.x(),
+                      y: e.target.y(),
+                    });
+                  }}
+                  onTransformEnd={(e) => {
+                    if (element.locked) return;
 
-                  updateElement(element.id, {
-                    x: node.x(),
-                    y: node.y(),
-                    fontSize: element.fontSize * node.scaleX(),
-                    rotation: node.rotation(),
-                  });
+                    const node = e.target;
 
-                  node.scaleX(1);
-                  node.scaleY(1);
-                }}
-              />
-            );
-          }
+                    updateElement(element.id, {
+                      x: node.x(),
+                      y: node.y(),
+                      width: Math.max(120, element.width * node.scaleX()),
+                      height: Math.max(80, element.height * node.scaleY()),
+                      rotation: node.rotation(),
+                    });
 
-          return null;
-        })}
+                    node.scaleX(1);
+                    node.scaleY(1);
+                  }}
+                />
+              );
+            }
+
+            if (element.type === "text") {
+              return (
+                <CanvasText
+                  key={element.id}
+                  element={element}
+                  selected={selectedId === element.id}
+                  nodeRef={selectedNodeRef}
+                  draggable={!element.locked}
+                  onClick={() => {
+                    if (element.locked) return;
+
+                    setSelectedId(element.id);
+                    setSelectedElement(element);
+                  }}
+                  onDblClick={() => {
+                    if (element.locked) return;
+
+                    setSelectedId(element.id);
+                  }}
+                  onDragEnd={(e) => {
+                    if (element.locked) return;
+
+                    updateElement(element.id, {
+                      x: e.target.x(),
+                      y: e.target.y(),
+                    });
+                  }}
+                  onTransformEnd={(e) => {
+                    if (element.locked) return;
+
+                    const node = e.target;
+
+                    updateElement(element.id, {
+                      x: node.x(),
+                      y: node.y(),
+                      fontSize: element.fontSize * node.scaleX(),
+                      rotation: node.rotation(),
+                    });
+
+                    node.scaleX(1);
+                    node.scaleY(1);
+                  }}
+                />
+              );
+            }
+
+            return null;
+          })}
       </Layer>
     </Stage>
   );
