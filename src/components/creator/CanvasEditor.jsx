@@ -358,6 +358,26 @@ export default function CanvasEditor({
       return updated;
     });
   };
+  const duplicateLayer = (id) => {
+    setElements((prev) => {
+      const element = prev.find((el) => el.id === id);
+
+      if (!element) return prev;
+
+      const copy = {
+        ...structuredClone(element),
+
+        id: crypto.randomUUID(),
+
+        x: (element.x || 0) + 20,
+        y: (element.y || 0) + 20,
+
+        name: element.name ? `${element.name} Copy` : `${element.type} Copy`,
+      };
+
+      return [...prev, copy];
+    });
+  };
 
   const handleStageClick = (e) => {
     // Don't add new elements when editing text
@@ -476,15 +496,21 @@ export default function CanvasEditor({
     });
   };
 
-  const deleteSelectedElement = () => {
-    if (!selectedId) return;
-
-    const updated = elements.filter((el) => el.id !== selectedId);
+  const deleteElement = (id) => {
+    const updated = elements.filter((el) => el.id !== id);
 
     setElements(updated);
 
-    setSelectedId(null);
-    setSelectedElement(null);
+    if (selectedId === id) {
+      setSelectedId(null);
+      setSelectedElement(null);
+    }
+  };
+
+  const deleteSelectedElement = () => {
+    if (!selectedId) return;
+
+    deleteElement(selectedId);
   };
   const copySelectedElement = () => {
     if (!selectedId) return;
@@ -514,6 +540,52 @@ export default function CanvasEditor({
     setSelectedId(newElement.id);
     setSelectedElement(newElement);
   };
+
+  const moveLayer = (id, direction) => {
+    setElements((prev) => {
+      const layers = [...prev];
+
+      const index = layers.findIndex((el) => el.id === id);
+
+      if (index === -1) return prev;
+
+      const layer = layers[index];
+
+      layers.splice(index, 1);
+
+      let newIndex = index;
+
+      switch (direction) {
+        case "forward":
+          newIndex = Math.min(index + 1, layers.length);
+          break;
+
+        case "backward":
+          newIndex = Math.max(index - 1, 0);
+          break;
+
+        case "front":
+          newIndex = layers.length;
+          break;
+
+        case "back":
+          newIndex = 0;
+          break;
+
+        default:
+          return prev;
+      }
+
+      layers.splice(newIndex, 0, layer);
+
+      return layers;
+    });
+  };
+  window.creatorStudioMoveLayer = moveLayer;
+
+  window.creatorStudioDuplicate = duplicateLayer;
+
+  window.creatorStudioDelete = deleteElement;
 
   return (
     <>

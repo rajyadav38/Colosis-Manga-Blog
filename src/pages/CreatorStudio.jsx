@@ -289,6 +289,11 @@ export default function CreatorStudio({ theme }) {
               reorderLayers={(activeId, overId) =>
                 window.creatorStudioReorderLayers?.(activeId, overId)
               }
+              duplicateLayer={(id) => window.creatorStudioDuplicate?.(id)}
+              deleteLayer={(id) => window.creatorStudioDelete?.(id)}
+              moveLayer={(id, direction) =>
+                window.creatorStudioMoveLayer?.(id, direction)
+              }
             />
           )}
         </div>
