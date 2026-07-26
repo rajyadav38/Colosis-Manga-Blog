@@ -29,6 +29,7 @@ export default function CanvasStage({
 
   selectedId,
 
+  previewMode,
   setSelectedId,
 
   setSelectedElement,
@@ -79,21 +80,23 @@ export default function CanvasStage({
           {/* Manga Page */}
           <PageImage url={page.imageUrl} />
 
-          <Transformer
-            ref={transformerRef}
-            rotateEnabled
-            keepRatio={false}
-            enabledAnchors={[
-              "top-left",
-              "top-center",
-              "top-right",
-              "middle-left",
-              "middle-right",
-              "bottom-left",
-              "bottom-center",
-              "bottom-right",
-            ]}
-          />
+          {!previewMode && (
+            <Transformer
+              ref={transformerRef}
+              rotateEnabled
+              keepRatio={false}
+              enabledAnchors={[
+                "top-left",
+                "top-center",
+                "top-right",
+                "middle-left",
+                "middle-right",
+                "bottom-left",
+                "bottom-center",
+                "bottom-right",
+              ]}
+            />
+          )}
         </Group>
         {/* Elements */}
         {elements
@@ -106,19 +109,22 @@ export default function CanvasStage({
                   element={element}
                   selected={selectedId === element.id}
                   nodeRef={selectedNodeRef}
-                  draggable={!element.locked}
+                  draggable={!previewMode && !element.locked}
                   onClick={() => {
+                    if (previewMode) return;
                     if (element.locked) return;
 
                     setSelectedId(element.id);
                     setSelectedElement(element);
                   }}
                   onDblClick={() => {
+                    if (previewMode) return;
                     if (element.locked) return;
 
                     setSelectedId(element.id);
                   }}
                   onDragEnd={(e) => {
+                    if (previewMode) return;
                     if (element.locked) return;
 
                     updateElement(element.id, {
@@ -127,6 +133,7 @@ export default function CanvasStage({
                     });
                   }}
                   onTransformEnd={(e) => {
+                    if (previewMode) return;
                     if (element.locked) return;
 
                     const node = e.target;
@@ -153,19 +160,22 @@ export default function CanvasStage({
                   element={element}
                   selected={selectedId === element.id}
                   nodeRef={selectedNodeRef}
-                  draggable={!element.locked}
+                  draggable={!previewMode && !element.locked}
                   onClick={() => {
+                    if (previewMode) return;
                     if (element.locked) return;
 
                     setSelectedId(element.id);
                     setSelectedElement(element);
                   }}
                   onDblClick={() => {
+                    if (previewMode) return;
                     if (element.locked) return;
 
                     setSelectedId(element.id);
                   }}
                   onDragEnd={(e) => {
+                    if (previewMode) return;
                     if (element.locked) return;
 
                     updateElement(element.id, {
@@ -174,6 +184,7 @@ export default function CanvasStage({
                     });
                   }}
                   onTransformEnd={(e) => {
+                    if (previewMode) return;
                     if (element.locked) return;
 
                     const node = e.target;

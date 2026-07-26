@@ -43,9 +43,10 @@ export default function CanvasEditor({
   const [selectedId, setSelectedId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [scale, setScale] = useState(1);
+  const clipboardRef = useRef(null);
+
   const PAGE_WIDTH = 800;
   const PAGE_HEIGHT = 1100;
-  const clipboardRef = useRef(null);
 
   const WORKSPACE_WIDTH = 1000;
   const WORKSPACE_HEIGHT = 1250;
@@ -58,6 +59,14 @@ export default function CanvasEditor({
   const [canvasPosition, setCanvasPosition] = useState(defaultCanvasPosition);
 
   const [isPanning, setIsPanning] = useState(false);
+
+  const [previewMode, setPreviewMode] = useState(false);
+  useEffect(() => {
+    if (previewMode) {
+      setSelectedId(null);
+      setSelectedElement(null);
+    }
+  }, [previewMode]);
 
   const selectedNodeRef = useRef();
 
@@ -93,24 +102,6 @@ export default function CanvasEditor({
       transformerRef.current.getLayer().batchDraw();
     }
   }, [selectedId, elements]);
-
-  // Delete Key
-  useEffect(() => {
-    const deleteElement = (e) => {
-      if (e.key !== "Delete") return;
-
-      if (!selectedId) return;
-
-      setElements((prev) => prev.filter((el) => el.id !== selectedId));
-
-      setSelectedId(null);
-      setSelectedElement(null);
-    };
-
-    window.addEventListener("keydown", deleteElement);
-
-    return () => window.removeEventListener("keydown", deleteElement);
-  }, [selectedId]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -200,59 +191,169 @@ export default function CanvasEditor({
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.ctrlKey && e.key.toLowerCase() === "z" && !e.shiftKey) {
-        e.preventDefault();
-        undo();
+      // Ignore shortcuts while typing
+      const tag = document.activeElement?.tagName;
+
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        document.activeElement?.isContentEditable
+      ) {
+        return;
+      }
+      if (previewMode) {
+        return;
       }
 
+      // Delete
+      if (e.key === "Delete") {
+        e.preventDefault();
+
+        if (!selectedId) return;
+
+        const selected = elements.find((el) => el.id === selectedId);
+
+        if (selected?.locked) return;
+
+        deleteElement(selectedId);
+        return;
+      }
+
+      // Duplicate
+      if (e.ctrlKey && e.key.toLowerCase() === "d") {
+        e.preventDefault();
+
+        if (selectedId) {
+          duplicateLayer(selectedId);
+        }
+
+        return;
+      }
+
+      // Undo
+      if (e.ctrlKey && !e.shiftKey && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        undo();
+        return;
+      }
+
+      // Redo
       if (
         (e.ctrlKey && e.key.toLowerCase() === "y") ||
         (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "z")
       ) {
         e.preventDefault();
         redo();
+        return;
       }
+
       // Copy
       if (e.ctrlKey && e.key.toLowerCase() === "c") {
         e.preventDefault();
         copySelectedElement();
+        return;
       }
 
       // Paste
       if (e.ctrlKey && e.key.toLowerCase() === "v") {
         e.preventDefault();
         pasteElement();
+        return;
       }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [undo, redo]);
-
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      // Don't intercept typing inside inputs
-      if (
-        document.activeElement.tagName === "INPUT" ||
-        document.activeElement.tagName === "TEXTAREA"
-      ) {
+      // Select
+      if (!e.ctrlKey && e.key.toLowerCase() === "v") {
+        setSelectedTool("select");
         return;
       }
 
-      if (e.key === "Delete") {
-        e.preventDefault();
-        const selected = elements.find((el) => el.id === selectedId);
+      // Bubble
+      if (!e.ctrlKey && e.key.toLowerCase() === "b") {
+        setSelectedTool("bubble");
+        return;
+      }
 
-        if (selected?.locked) return;
-        deleteSelectedElement();
+      // Text
+      if (!e.ctrlKey && e.key.toLowerCase() === "t") {
+        setSelectedTool("text");
+        return;
+      }
+
+      // Preview
+      if (!e.ctrlKey && e.key.toLowerCase() === "p") {
+        setPreviewMode((prev) => !prev);
+        return;
+      }
+      // Move selected element
+      if (
+        selectedId &&
+        ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)
+      ) {
+        e.preventDefault();
+
+        const step = e.shiftKey ? 10 : 1;
+
+        const element = elements.find((el) => el.id === selectedId);
+
+        if (!element || element.locked) return;
+
+        let x = element.x;
+        let y = element.y;
+
+        switch (e.key) {
+          case "ArrowLeft":
+            x -= step;
+            break;
+
+          case "ArrowRight":
+            x += step;
+            break;
+
+          case "ArrowUp":
+            y -= step;
+            break;
+
+          case "ArrowDown":
+            y += step;
+            break;
+
+          default:
+            break;
+        }
+
+        updateElement(selectedId, { x, y });
+
+        return;
+      }
+
+      // Bring Forward / Bring To Front
+      if (e.ctrlKey && (e.key === "]" || e.key === "}")) {
+        e.preventDefault();
+
+        if (selectedId) {
+          moveLayer(selectedId, e.shiftKey ? "front" : "forward");
+        }
+
+        return;
+      }
+
+      // Send Backward / Send To Back
+      if (e.ctrlKey && (e.key === "[" || e.key === "{")) {
+        e.preventDefault();
+
+        if (selectedId) {
+          moveLayer(selectedId, e.shiftKey ? "back" : "backward");
+        }
+
+        return;
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
 
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedId, elements]);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectedId, elements, undo, redo, previewMode]);
 
   const addBubble = (x, y) => {
     setElements((prev) => [
@@ -381,6 +482,7 @@ export default function CanvasEditor({
 
   const handleStageClick = (e) => {
     // Don't add new elements when editing text
+    if (previewMode) return;
     if (editingId) return;
 
     const clickedOnTransformer = e.target.getClassName() === "Transformer";
@@ -491,7 +593,6 @@ export default function CanvasEditor({
 
     setCanvasPosition({
       x: (WORKSPACE_WIDTH - PAGE_WIDTH * newScale) / 2,
-
       y: (WORKSPACE_HEIGHT - PAGE_HEIGHT * newScale) / 2,
     });
   };
@@ -586,92 +687,75 @@ export default function CanvasEditor({
   window.creatorStudioDuplicate = duplicateLayer;
 
   window.creatorStudioDelete = deleteElement;
-
   return (
-    <>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          width: "100%",
-          gap: "15px",
-        }}
-      >
-        <div className="editor-toolbar">
-          <div className="toolbar-left">
-            <button
-              className={selectedTool === "select" ? "active" : ""}
-              onClick={() => setSelectedTool("select")}
-            >
-              🖱 Select
-            </button>
+    <div className="canvas-editor-wrapper">
+      <div className="editor-toolbar">
+        <button
+          disabled={previewMode}
+          className={`toolbar-btn ${selectedTool === "select" ? "active" : ""}`}
+          onClick={() => setSelectedTool("select")}
+        >
+          🖱 Select
+        </button>
 
-            <button
-              className={selectedTool === "bubble" ? "active" : ""}
-              onClick={() => setSelectedTool("bubble")}
-            >
-              💬 Bubble
-            </button>
+        <button
+          disabled={previewMode}
+          className={`toolbar-btn ${selectedTool === "bubble" ? "active" : ""}`}
+          onClick={() => setSelectedTool("bubble")}
+        >
+          💬 Bubble
+        </button>
 
-            <button
-              className={selectedTool === "text" ? "active" : ""}
-              onClick={() => setSelectedTool("text")}
-            >
-              📝 Text
-            </button>
-          </div>
+        <button
+          disabled={previewMode}
+          className={`toolbar-btn ${selectedTool === "text" ? "active" : ""}`}
+          onClick={() => setSelectedTool("text")}
+        >
+          📝 Text
+        </button>
 
-          <div className="toolbar-divider"></div>
+        <button className="toolbar-btn" onClick={zoomOut}>
+          ➖
+        </button>
 
-          <div className="toolbar-right">
-            <button onClick={zoomOut}>➖</button>
+        <span className="zoom-value">{Math.round(scale * 100)}%</span>
 
-            <span className="zoom-value">{Math.round(scale * 100)}%</span>
+        <button className="toolbar-btn" onClick={zoomIn}>
+          ➕
+        </button>
 
-            <button onClick={zoomIn}>➕</button>
+        <button className="toolbar-btn" onClick={fitScreen}>
+          Fit
+        </button>
 
-            <button onClick={fitScreen}>Fit</button>
-            <button onClick={undo} disabled={!canUndo}>
-              Undo
-            </button>
-
-            <button onClick={redo} disabled={!canRedo}>
-              Redo
-            </button>
-
-            <button disabled={!selectedId} onClick={deleteSelectedElement}>
-              🗑 Delete
-            </button>
-            <button disabled={!selectedId} onClick={copySelectedElement}>
-              Copy
-            </button>
-
-            <button disabled={!clipboardRef.current} onClick={pasteElement}>
-              Paste
-            </button>
-          </div>
-        </div>
-        <div className={`canvas-paper ${isPanning ? "panning" : ""}`}>
-          <CanvasStage
-            page={page}
-            elements={elements}
-            stageRef={stageRef}
-            transformerRef={transformerRef}
-            selectedNodeRef={selectedNodeRef}
-            selectedId={selectedId}
-            setSelectedId={setSelectedId}
-            setSelectedElement={setSelectedElement}
-            updateElement={updateElement}
-            handleStageClick={handleStageClick}
-            handleWheel={handleWheel}
-            scale={scale}
-            isPanning={isPanning}
-            canvasPosition={canvasPosition}
-            setCanvasPosition={setCanvasPosition}
-          />
-        </div>
+        <button
+          className={`toolbar-btn ${previewMode ? "active" : ""}`}
+          onClick={() => setPreviewMode((prev) => !prev)}
+        >
+          {previewMode ? "✏ Exit Preview" : "👁 Preview"}
+        </button>
       </div>
-    </>
+
+      <div className={`canvas-paper ${isPanning ? "panning" : ""}`}>
+        <CanvasStage
+          page={page}
+          elements={elements}
+          stageRef={stageRef}
+          transformerRef={transformerRef}
+          selectedNodeRef={selectedNodeRef}
+          selectedId={selectedId}
+          setSelectedId={setSelectedId}
+          setSelectedElement={setSelectedElement}
+          updateElement={updateElement}
+          previewMode={previewMode}
+          handleStageClick={handleStageClick}
+          handleWheel={handleWheel}
+          scale={scale}
+          isPanning={isPanning}
+          canvasPosition={canvasPosition}
+          setCanvasPosition={setCanvasPosition}
+        />
+      </div>
+    </div>
   );
 }
