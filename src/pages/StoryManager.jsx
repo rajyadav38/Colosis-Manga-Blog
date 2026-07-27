@@ -83,11 +83,13 @@ export default function StoryManager({ theme }) {
         return;
       }
 
-      if (!chapterContent.trim()) {
-        alert("Please write chapter content");
-        return;
-      }
+      if (story.type === "novel") {
+        if (!chapterContent.trim()) {
+          alert("Please write chapter content");
 
+          return;
+        }
+      }
       // EDIT MODE
       if (editingChapter) {
         await fetch(`${API_URL}/api/chapters/${editingChapter._id}`, {
@@ -129,8 +131,15 @@ export default function StoryManager({ theme }) {
       });
 
       const data = await res.json();
-
       console.log(data);
+      if (story.type === "manga" || story.type === "comic") {
+        setChapterTitle("");
+        setChapterContent("");
+
+        navigate(`/creator/${data._id}`);
+
+        return;
+      }
 
       alert("Chapter Added");
 
@@ -304,34 +313,53 @@ export default function StoryManager({ theme }) {
             onChange={(e) => setChapterTitle(e.target.value)}
           />
 
-          <textarea
-            className="form-control mb-3"
-            rows="12"
-            placeholder={
-              story.type === "novel"
-                ? "Write your chapter..."
-                : `Write your ${story.type} chapter...
+          {story.type === "novel" ? (
+            <>
+              <textarea
+                className="form-control mb-3"
+                rows="12"
+                placeholder="Write your chapter..."
+                value={chapterContent}
+                onChange={(e) => setChapterContent(e.target.value)}
+              />
 
-Example:
+              <button
+                className="btn mb-4"
+                style={{
+                  background: theme.accent,
+                  color: "white",
+                }}
+                onClick={handleAddChapter}
+              >
+                {editingChapter ? "💾 Update Chapter" : "➕ Save Chapter"}
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="alert alert-info mb-3">
+                <h6 className="fw-bold mb-2">🎨 Manga Creator Studio</h6>
 
-Arjun enters the cave and sees a sleeping dragon.
-The dragon slowly opens its eyes.
-The cave starts shaking...`
-            }
-            value={chapterContent}
-            onChange={(e) => setChapterContent(e.target.value)}
-          />
+                <p className="mb-2">
+                  After creating this chapter you'll automatically enter Creator
+                  Studio.
+                </p>
 
-          <button
-            className="btn mb-4"
-            style={{
-              background: theme.accent,
-              color: "white",
-            }}
-            onClick={handleAddChapter}
-          >
-            {editingChapter ? "💾 Update Chapter" : "➕ Save Chapter"}
-          </button>
+                <ul className="mb-0">
+                  <li>Upload manga pages</li>
+                  <li>Add speech bubbles</li>
+                  <li>Add dialogue</li>
+                  <li>Arrange your pages</li>
+                </ul>
+              </div>
+
+              <button
+                className="btn btn-warning mb-4"
+                onClick={handleAddChapter}
+              >
+                🎨 Create Chapter & Open Creator Studio
+              </button>
+            </>
+          )}
 
           <hr />
 
@@ -347,38 +375,40 @@ The cave starts shaking...`
                     Chapter {chapter.chapterNumber}: {chapter.title}
                   </h5>
 
-                  <p
-                    style={{
-                      whiteSpace: "pre-wrap",
-                    }}
-                  >
-                    {chapter.content?.substring(0, 250)}
-                    {chapter.content?.length > 250 && "..."}
-                  </p>
+                  {story.type === "novel" ? (
+                    <p style={{ whiteSpace: "pre-wrap" }}>
+                      {chapter.content?.substring(0, 250)}
+                      {chapter.content?.length > 250 && "..."}
+                    </p>
+                  ) : (
+                    <div className="text-muted mb-3">
+                      📄 {chapter.pages?.length || 0} Pages Created
+                    </div>
+                  )}
 
                   <div className="d-flex gap-2 flex-wrap">
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={() => {
-                        setEditingChapter(chapter);
-                        setChapterTitle(chapter.title);
-                        setChapterContent(chapter.content || "");
+                    {story.type === "novel" ? (
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => {
+                          setEditingChapter(chapter);
+                          setChapterTitle(chapter.title);
+                          setChapterContent(chapter.content || "");
 
-                        window.scrollTo({
-                          top: 0,
-                          behavior: "smooth",
-                        });
-                      }}
-                    >
-                      ✏️ Edit
-                    </button>
-
-                    {(story.type === "manga" || story.type === "comic") && (
+                          window.scrollTo({
+                            top: 0,
+                            behavior: "smooth",
+                          });
+                        }}
+                      >
+                        ✏ Edit
+                      </button>
+                    ) : (
                       <button
                         className="btn btn-warning btn-sm"
                         onClick={() => navigate(`/creator/${chapter._id}`)}
                       >
-                        🎨 Creator Studio
+                        🎨 Continue Editing
                       </button>
                     )}
 
