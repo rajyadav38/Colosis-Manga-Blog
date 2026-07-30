@@ -690,50 +690,81 @@ export default function CanvasEditor({
   return (
     <div className="canvas-editor-wrapper">
       <div className="editor-toolbar">
-        <button
-          disabled={previewMode}
-          className={`toolbar-btn ${selectedTool === "select" ? "active" : ""}`}
-          onClick={() => setSelectedTool("select")}
-        >
-          🖱 Select
-        </button>
+        <div className="toolbar-group">
+          <button
+            disabled={previewMode}
+            className={`toolbar-btn ${
+              selectedTool === "select" ? "active" : ""
+            }`}
+            onClick={() => setSelectedTool("select")}
+            title="Select (V)"
+          >
+            <i className="bi bi-cursor-fill"></i>
+            <span>Select</span>
+          </button>
 
-        <button
-          disabled={previewMode}
-          className={`toolbar-btn ${selectedTool === "bubble" ? "active" : ""}`}
-          onClick={() => setSelectedTool("bubble")}
-        >
-          💬 Bubble
-        </button>
+          <button
+            disabled={previewMode}
+            className={`toolbar-btn ${
+              selectedTool === "bubble" ? "active" : ""
+            }`}
+            onClick={() => setSelectedTool("bubble")}
+            title="Speech Bubble (B)"
+          >
+            <i className="bi bi-chat-square-text-fill"></i>
+            <span>Bubble</span>
+          </button>
 
-        <button
-          disabled={previewMode}
-          className={`toolbar-btn ${selectedTool === "text" ? "active" : ""}`}
-          onClick={() => setSelectedTool("text")}
-        >
-          📝 Text
-        </button>
+          <button
+            disabled={previewMode}
+            className={`toolbar-btn ${selectedTool === "text" ? "active" : ""}`}
+            onClick={() => setSelectedTool("text")}
+            title="Text (T)"
+          >
+            <i className="bi bi-fonts"></i>
+            <span>Text</span>
+          </button>
+        </div>
 
-        <button className="toolbar-btn" onClick={zoomOut}>
-          ➖
-        </button>
+        <div className="toolbar-divider"></div>
 
-        <span className="zoom-value">{Math.round(scale * 100)}%</span>
+        <div className="toolbar-group">
+          <button className="toolbar-btn" onClick={zoomOut}>
+            <i className="bi bi-dash-lg"></i>
+          </button>
 
-        <button className="toolbar-btn" onClick={zoomIn}>
-          ➕
-        </button>
+          <span className="zoom-value">{Math.round(scale * 100)}%</span>
 
-        <button className="toolbar-btn" onClick={fitScreen}>
-          Fit
-        </button>
+          <button className="toolbar-btn" onClick={zoomIn}>
+            <i className="bi bi-plus-lg"></i>
+          </button>
 
-        <button
-          className={`toolbar-btn ${previewMode ? "active" : ""}`}
-          onClick={() => setPreviewMode((prev) => !prev)}
-        >
-          {previewMode ? "✏ Exit Preview" : "👁 Preview"}
-        </button>
+          <button
+            className="toolbar-btn"
+            onClick={fitScreen}
+            title="Fit Screen"
+          >
+            <i className="bi bi-arrows-fullscreen"></i>
+            <span>Fit</span>
+          </button>
+        </div>
+
+        <div className="toolbar-divider"></div>
+
+        <div className="toolbar-group">
+          <button
+            className={`toolbar-btn ${previewMode ? "active" : ""}`}
+            onClick={() => setPreviewMode((prev) => !prev)}
+          >
+            <i
+              className={`bi ${
+                previewMode ? "bi-pencil-square" : "bi-eye-fill"
+              }`}
+            ></i>
+
+            <span>{previewMode ? "Exit Preview" : "Preview"}</span>
+          </button>
+        </div>
       </div>
 
       <div className={`canvas-paper ${isPanning ? "panning" : ""}`}>
