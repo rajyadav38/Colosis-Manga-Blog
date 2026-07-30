@@ -63,7 +63,13 @@ function LayersPanel({
   return (
     <>
       <div className="layers-panel">
-        <h3>Layers</h3>
+        <div className="layers-header">
+          <div>
+            <h4>Layers</h4>
+
+            <span>{elements.length} Objects</span>
+          </div>
+        </div>
 
         {elements.length === 0 ? (
           <div
@@ -92,9 +98,7 @@ function LayersPanel({
                 <SortableLayer key={element.id} element={element}>
                   {({ setNodeRef, style, attributes, listeners }) => (
                     <div
-                      ref={setNodeRef}
-                      style={style}
-                      className={`layer ${
+                      className={`layer-card ${
                         selectedId === element.id ? "active" : ""
                       }`}
                       onClick={() => onLayerSelect?.(element.id)}
@@ -124,7 +128,7 @@ function LayersPanel({
                           flexShrink: 0,
                         }}
                       >
-                        ☰
+                        <i className="bi bi-grip-vertical"></i>
                       </span>
 
                       {/* Layer Type */}
@@ -134,11 +138,13 @@ function LayersPanel({
                           flexShrink: 0,
                         }}
                       >
-                        {element.type === "bubble"
-                          ? "💬"
-                          : element.type === "text"
-                            ? "📝"
-                            : "📦"}
+                        {element.type === "bubble" ? (
+                          <i className="bi bi-chat-square-text-fill"></i>
+                        ) : element.type === "text" ? (
+                          <i className="bi bi-fonts"></i>
+                        ) : (
+                          "📦"
+                        )}
                       </span>
 
                       {/* Layer Name */}
@@ -215,7 +221,11 @@ function LayersPanel({
                           toggleVisibility?.(element.id);
                         }}
                       >
-                        {element.visible === false ? "🚫" : "👁"}
+                        {element.visible === false ? (
+                          "🚫"
+                        ) : (
+                          <i className="bi bi-eye-fill"></i>
+                        )}
                       </button>
 
                       {/* Lock */}
@@ -226,7 +236,11 @@ function LayersPanel({
                           toggleLock?.(element.id);
                         }}
                       >
-                        {element.locked ? "🔒" : "🔓"}
+                        {element.locked ? (
+                          <i className="bi bi-lock-fill"></i>
+                        ) : (
+                          "🔓"
+                        )}
                       </button>
                     </div>
                   )}

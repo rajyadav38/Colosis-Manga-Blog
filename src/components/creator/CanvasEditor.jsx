@@ -44,7 +44,9 @@ export default function CanvasEditor({
   const [editingId, setEditingId] = useState(null);
   const [scale, setScale] = useState(1);
   const clipboardRef = useRef(null);
-
+  const [saveStatus, setSaveStatus] = useState("saved");
+  const [isDirty, setIsDirty] = useState(false);
+  // "saved" | "saving" | "error"
   const PAGE_WIDTH = 800;
   const PAGE_HEIGHT = 1100;
 
@@ -71,9 +73,11 @@ export default function CanvasEditor({
   const selectedNodeRef = useRef();
 
   useEffect(() => {
-    if (page) {
-      setElements(page.elements || []);
-    }
+    if (!page) return;
+
+    setElements(page.elements || []);
+    setIsDirty(false);
+    setSaveStatus("saved");
   }, [page]);
 
   useEffect(() => {
@@ -355,6 +359,29 @@ export default function CanvasEditor({
     };
   }, [selectedId, elements, undo, redo, previewMode]);
 
+  useEffect(() => {
+    if (!page || !isDirty) return;
+
+    setSaveStatus("saving");
+
+    const timer = setTimeout(async () => {
+      try {
+        const success = await saveElements(elements);
+
+        if (success) {
+          setSaveStatus("saved");
+          setIsDirty(false);
+        } else {
+          setSaveStatus("error");
+        }
+      } catch {
+        setSaveStatus("error");
+      }
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [elements, isDirty, page, saveElements]);
+
   const addBubble = (x, y) => {
     setElements((prev) => [
       ...prev,
@@ -370,6 +397,7 @@ export default function CanvasEditor({
         text: "Double click",
       },
     ]);
+    setIsDirty(true);
   };
 
   const addText = (x, y) => {
@@ -385,6 +413,7 @@ export default function CanvasEditor({
         text: "Text",
       },
     ]);
+    setIsDirty(true);
   };
 
   const updateElement = (id, values) => {
@@ -398,6 +427,7 @@ export default function CanvasEditor({
     );
 
     setElements(updated);
+    setIsDirty(true);
 
     const selected = updated.find((el) => el.id === id);
 
@@ -416,6 +446,7 @@ export default function CanvasEditor({
           : el,
       ),
     );
+    setIsDirty(true);
   };
   const toggleLock = (id) => {
     setElements((prev) =>
@@ -428,6 +459,7 @@ export default function CanvasEditor({
           : el,
       ),
     );
+    setIsDirty(true);
   };
   const renameLayer = (id, name) => {
     setElements((prev) =>
@@ -440,6 +472,7 @@ export default function CanvasEditor({
           : el,
       ),
     );
+    setIsDirty(true);
   };
 
   const reorderLayers = (activeId, overId) => {
@@ -455,7 +488,7 @@ export default function CanvasEditor({
 
       const [moved] = updated.splice(oldIndex, 1);
       updated.splice(newIndex, 0, moved);
-
+      setIsDirty(true);
       return updated;
     });
   };
@@ -475,7 +508,7 @@ export default function CanvasEditor({
 
         name: element.name ? `${element.name} Copy` : `${element.type} Copy`,
       };
-
+      setIsDirty(true);
       return [...prev, copy];
     });
   };
@@ -601,6 +634,7 @@ export default function CanvasEditor({
     const updated = elements.filter((el) => el.id !== id);
 
     setElements(updated);
+    setIsDirty(true);
 
     if (selectedId === id) {
       setSelectedId(null);
@@ -637,6 +671,7 @@ export default function CanvasEditor({
     const updated = [...elements, newElement];
 
     setElements(updated);
+    setIsDirty(true);
 
     setSelectedId(newElement.id);
     setSelectedElement(newElement);
@@ -676,6 +711,7 @@ export default function CanvasEditor({
         default:
           return prev;
       }
+      setIsDirty(true);
 
       layers.splice(newIndex, 0, layer);
 
@@ -685,8 +721,6 @@ export default function CanvasEditor({
   window.creatorStudioMoveLayer = moveLayer;
 
   window.creatorStudioDuplicate = duplicateLayer;
-
-  window.creatorStudioDelete = deleteElement;
   return (
     <div className="canvas-editor-wrapper">
       <div className="editor-toolbar">
@@ -764,6 +798,28 @@ export default function CanvasEditor({
 
             <span>{previewMode ? "Exit Preview" : "Preview"}</span>
           </button>
+          <div className="toolbar-save-status">
+            {saveStatus === "saving" && (
+              <>
+                <i className="bi bi-arrow-repeat spin"></i>
+                <span>Saving...</span>
+              </>
+            )}
+
+            {saveStatus === "saved" && (
+              <>
+                <i className="bi bi-check-circle-fill"></i>
+                <span>Saved</span>
+              </>
+            )}
+
+            {saveStatus === "error" && (
+              <>
+                <i className="bi bi-exclamation-circle-fill"></i>
+                <span>Save Failed</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

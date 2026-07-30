@@ -7,34 +7,58 @@ export default function PropertiesPanel({
   save,
 }) {
   return (
-    <div
-      className="rounded shadow p-3"
-      style={{
-        background: "white",
-        minHeight: "80vh",
-      }}
-    >
-      <h4 className="fw-bold mb-4">Properties</h4>
+    <div className="properties-panel">
+      <div className="properties-header">
+        <h4>
+          <i className="bi bi-sliders"></i>
+          <span>Properties</span>
+        </h4>
+      </div>
+
+      {/* ================= EMPTY STATE ================= */}
 
       {!selectedElement && (
         <>
-          <p className="text-muted">Select a speech bubble or text to edit.</p>
+          <div className="properties-empty">
+            <i className="bi bi-cursor-fill"></i>
 
-          <button className="btn btn-success w-100 mt-4" onClick={save}>
-            💾 Save Chapter
+            <h5>No Object Selected</h5>
+
+            <p>Select a speech bubble or text layer to edit its properties.</p>
+          </div>
+
+          <button className="action-btn save-btn mt-3" onClick={save}>
+            <i className="bi bi-floppy-fill"></i>
+            Save Chapter
           </button>
         </>
       )}
 
+      {/* ================= SELECTED ================= */}
+
       {selectedElement && (
         <>
-          <div className="mb-3">
-            <label className="form-label fw-semibold">
-              {selectedElement.type === "bubble" ? "Dialogue" : "Text"}
-            </label>
+          {/* Selected Object */}
+
+          <div className="property-card">
+            <div className="property-card-title">
+              <i
+                className={
+                  selectedElement.type === "bubble"
+                    ? "bi bi-chat-square-text-fill"
+                    : "bi bi-fonts"
+                }
+              />
+
+              <span>
+                {selectedElement.type === "bubble"
+                  ? "Speech Bubble"
+                  : "Text Layer"}
+              </span>
+            </div>
 
             <textarea
-              className="form-control"
+              className="property-textarea"
               rows={4}
               value={selectedElement.text}
               onChange={(e) =>
@@ -45,8 +69,15 @@ export default function PropertiesPanel({
             />
           </div>
 
-          <div className="mb-3">
-            <label className="form-label fw-semibold">Font Size</label>
+          {/* Appearance */}
+
+          <div className="property-card">
+            <div className="property-card-title">
+              <i className="bi bi-palette-fill"></i>
+              <span>Appearance</span>
+            </div>
+
+            <label>Font Size</label>
 
             <input
               type="range"
@@ -61,53 +92,63 @@ export default function PropertiesPanel({
               }
             />
 
-            <small>{selectedElement.fontSize}px</small>
+            <div className="property-value">{selectedElement.fontSize}px</div>
           </div>
 
+          {/* Bubble */}
+
           {selectedElement.type === "bubble" && (
-            <>
-              <div className="mb-3">
-                <label className="form-label fw-semibold">Width</label>
-
-                <input
-                  type="range"
-                  min="80"
-                  max="500"
-                  value={selectedElement.width}
-                  className="form-range"
-                  onChange={(e) =>
-                    updateSelected({
-                      width: Number(e.target.value),
-                    })
-                  }
-                />
-
-                <small>{selectedElement.width}px</small>
+            <div className="property-card">
+              <div className="property-card-title">
+                <i className="bi bi-aspect-ratio-fill"></i>
+                <span>Bubble</span>
               </div>
 
-              <div className="mb-3">
-                <label className="form-label fw-semibold">Height</label>
+              <label>Width</label>
 
-                <input
-                  type="range"
-                  min="60"
-                  max="300"
-                  value={selectedElement.height}
-                  className="form-range"
-                  onChange={(e) =>
-                    updateSelected({
-                      height: Number(e.target.value),
-                    })
-                  }
-                />
+              <input
+                type="range"
+                min="80"
+                max="500"
+                value={selectedElement.width}
+                className="form-range"
+                onChange={(e) =>
+                  updateSelected({
+                    width: Number(e.target.value),
+                  })
+                }
+              />
 
-                <small>{selectedElement.height}px</small>
-              </div>
-            </>
+              <div className="property-value">{selectedElement.width}px</div>
+
+              <label className="mt-3">Height</label>
+
+              <input
+                type="range"
+                min="60"
+                max="300"
+                value={selectedElement.height}
+                className="form-range"
+                onChange={(e) =>
+                  updateSelected({
+                    height: Number(e.target.value),
+                  })
+                }
+              />
+
+              <div className="property-value">{selectedElement.height}px</div>
+            </div>
           )}
 
-          <div className="mb-3">
-            <label className="form-label fw-semibold">Rotation</label>
+          {/* Transform */}
+
+          <div className="property-card">
+            <div className="property-card-title">
+              <i className="bi bi-bounding-box"></i>
+              <span>Transform</span>
+            </div>
+
+            <label>Rotation</label>
 
             <input
               type="range"
@@ -122,25 +163,36 @@ export default function PropertiesPanel({
               }
             />
 
-            <small>{selectedElement.rotation}°</small>
+            <div className="property-value">{selectedElement.rotation}°</div>
           </div>
 
-          <button
-            className="btn btn-danger w-100 mb-3"
-            onClick={() => {
-              deleteSelected();
+          {/* Actions */}
 
-              if (window.creatorStudioDelete) {
-                window.creatorStudioDelete();
-              }
-            }}
-          >
-            🗑 Delete Element
-          </button>
+          <div className="property-card">
+            <div className="property-card-title">
+              <i className="bi bi-lightning-fill"></i>
+              <span>Actions</span>
+            </div>
 
-          <button className="btn btn-success w-100" onClick={save}>
-            💾 Save Chapter
-          </button>
+            <button
+              className="action-btn delete-btn mb-3"
+              onClick={() => {
+                deleteSelected();
+
+                if (window.creatorStudioDelete) {
+                  window.creatorStudioDelete();
+                }
+              }}
+            >
+              <i className="bi bi-trash-fill"></i>
+              Delete Element
+            </button>
+
+            <button className="action-btn save-btn" onClick={save}>
+              <i className="bi bi-floppy-fill"></i>
+              Save Chapter
+            </button>
+          </div>
         </>
       )}
     </div>

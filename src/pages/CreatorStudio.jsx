@@ -87,27 +87,30 @@ export default function CreatorStudio({ theme }) {
   };
 
   const saveElements = async (elements) => {
-    if (!selectedPage) return;
+    if (!selectedPage) return false;
 
     try {
-      await fetch(
+      const res = await fetch(
         `${API_URL}/api/chapters/${chapterId}/page/${selectedPage.pageNumber}`,
         {
           method: "PUT",
-
           headers: {
             "Content-Type": "application/json",
           },
-
-          body: JSON.stringify({
-            elements,
-          }),
+          body: JSON.stringify({ elements }),
         },
       );
 
-      fetchChapter();
+      if (!res.ok) {
+        return false;
+      }
+
+      await fetchChapter();
+
+      return true;
     } catch (err) {
       console.log(err);
+      return false;
     }
   };
   const updateSelected = (changes) => {
