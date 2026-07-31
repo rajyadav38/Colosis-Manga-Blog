@@ -4,6 +4,8 @@ import CanvasEditor from "../components/creator/CanvasEditor";
 import PropertiesPanel from "../components/creator/PropertiesPanel";
 import "../styles/CreatorStudio.css";
 import LayersPanel from "../components/creator/LayersPanel";
+import PagesSidebar from "../components/creator/PagesSidebar";
+import PageContextMenu from "../components/creator/PageContextMenu";
 export default function CreatorStudio({ theme }) {
   const { chapterId } = useParams();
 
@@ -21,6 +23,14 @@ export default function CreatorStudio({ theme }) {
   const [editorElements, setEditorElements] = useState([]);
   const [editorSelectedId, setEditorSelectedId] = useState(null);
   const [activeSidebarTab, setActiveSidebarTab] = useState("properties");
+  const [pageMenuVisible, setPageMenuVisible] = useState(false);
+
+  const [pageMenuPosition, setPageMenuPosition] = useState({
+    x: 0,
+    y: 0,
+  });
+
+  const [menuPage, setMenuPage] = useState(null);
 
   useEffect(() => {
     fetchChapter();
@@ -84,6 +94,83 @@ export default function CreatorStudio({ theme }) {
     } catch (err) {
       console.log(err);
     }
+  };
+
+  const renamePage = async (pageId) => {
+    const page = pages.find((p) => p.id === pageId);
+
+    if (!page) return;
+
+    const newName = window.prompt("Rename Page", page.name);
+
+    if (!newName || newName.trim() === "") return;
+
+    try {
+      await fetch(
+        `${API_URL}/api/chapters/${chapterId}/page/${pageId}/rename`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: newName.trim(),
+          }),
+        },
+      );
+
+      fetchChapter();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const duplicatePage = async (pageId) => {
+    try {
+      await fetch(
+        `${API_URL}/api/chapters/${chapterId}/page/${pageId}/duplicate`,
+        {
+          method: "POST",
+        },
+      );
+
+      fetchChapter();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const deletePage = async (pageId) => {
+    const confirmDelete = window.confirm("Delete this page permanently?");
+
+    if (!confirmDelete) return;
+
+    try {
+      await fetch(`${API_URL}/api/chapters/${chapterId}/page/${pageId}`, {
+        method: "DELETE",
+      });
+
+      fetchChapter();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleNewPage = () => {
+    document.getElementById("upload-page-input")?.click();
+  };
+
+  const handlePageMenu = (event, page) => {
+    event.stopPropagation();
+
+    setMenuPage(page);
+
+    setPageMenuPosition({
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    setPageMenuVisible(true);
   };
 
   const saveElements = async (elements) => {
@@ -176,48 +263,24 @@ export default function CreatorStudio({ theme }) {
       <h2 className="creator-title">🎨 Creator Studio</h2>
 
       <div className="creator-layout">
-        {/* LEFT SIDEBAR */}
-
         <div className="creator-panel">
-          <div
-            className="rounded shadow p-3"
-            style={{
-              background: theme.card,
-              minHeight: "80vh",
-            }}
-          >
-            <h4 className="pages-title">Chapter Pages</h4>
+          <PagesSidebar
+            pages={pages}
+            currentPage={selectedPage}
+            setCurrentPage={setSelectedPage}
+            onNewPage={handleNewPage}
+            onPageMenu={handlePageMenu}
+          />
 
-            <label className="btn btn-primary upload-btn">
-              Upload Page
-              <input
-                hidden
-                type="file"
-                accept="image/*"
-                onChange={uploadPage}
-              />
-            </label>
+          {/* Hidden Upload */}
 
-            {pages.map((page) => (
-              <img
-                key={page.pageNumber}
-                src={page.imageUrl}
-                alt=""
-                onClick={() => setSelectedPage(page)}
-                style={{
-                  width: "100%",
-                  marginBottom: 12,
-                  borderRadius: 10,
-                  cursor: "pointer",
-
-                  border:
-                    selectedPage?.pageNumber === page.pageNumber
-                      ? "3px solid #ff4d6d"
-                      : "2px solid transparent",
-                }}
-              />
-            ))}
-          </div>
+          <input
+            id="upload-page-input"
+            hidden
+            type="file"
+            accept="image/*"
+            onChange={uploadPage}
+          />
         </div>
 
         {/* CENTER */}
@@ -301,6 +364,31 @@ export default function CreatorStudio({ theme }) {
           )}
         </div>
       </div>
+      <PageContextMenu
+        visible={pageMenuVisible}
+        x={pageMenuPosition.x}
+        y={pageMenuPosition.y}
+        onRename={() => {
+          renamePage(menuPage.id);
+          setPageMenuVisible(false);
+        }}
+        onDuplicate={() => {
+          duplicatePage(menuPage.id);
+          setPageMenuVisible(false);
+        }}
+        onDelete={() => {
+          deletePage(menuPage.id);
+          setPageMenuVisible(false);
+        }}
+        onMoveUp={() => {
+          console.log("Move Up", menuPage);
+          setPageMenuVisible(false);
+        }}
+        onMoveDown={() => {
+          console.log("Move Down", menuPage);
+          setPageMenuVisible(false);
+        }}
+      />
     </div>
   );
 }

@@ -26,6 +26,18 @@ const chapterSchema = new mongoose.Schema(
     // For manga/comics
     pages: [
       {
+        // Unique page id
+        id: {
+          type: String,
+          required: true,
+        },
+
+        // Page name shown in Creator Studio
+        name: {
+          type: String,
+          default: "",
+        },
+
         pageNumber: {
           type: Number,
           required: true,
@@ -47,7 +59,7 @@ const chapterSchema = new mongoose.Schema(
 
             text: String,
 
-            // 👇 ADD THESE
+            // Layer name
             name: {
               type: String,
               default: "",
