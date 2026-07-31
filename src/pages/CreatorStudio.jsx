@@ -369,15 +369,15 @@ export default function CreatorStudio({ theme }) {
         x={pageMenuPosition.x}
         y={pageMenuPosition.y}
         onRename={() => {
-          renamePage(menuPage.id);
+          renamePage(menuPage._id);
           setPageMenuVisible(false);
         }}
         onDuplicate={() => {
-          duplicatePage(menuPage.id);
+          duplicatePage(menuPage._id);
           setPageMenuVisible(false);
         }}
         onDelete={() => {
-          deletePage(menuPage.id);
+          deletePage(menuPage._id);
           setPageMenuVisible(false);
         }}
         onMoveUp={() => {

@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
-const Story = require("../models/Story");
-const model = require("../config/gemini");
 const Chapter = require("../models/Chapter");
-const mongoose = require("mongoose");
-const cloudinary = require("../config/cloudinary");
+
+// ============================
+// CREATE CHAPTER
+// ============================
 
 router.post("/create", async (req, res) => {
   try {
@@ -20,9 +20,13 @@ router.post("/create", async (req, res) => {
   }
 });
 
-router.put("/:chapterId/page/:pageNumber", async (req, res) => {
+// ============================
+// SAVE PAGE ELEMENTS
+// ============================
+
+router.put("/:chapterId/page/:pageId", async (req, res) => {
   try {
-    const { chapterId, pageNumber } = req.params;
+    const { chapterId, pageId } = req.params;
     const { elements } = req.body;
 
     const chapter = await Chapter.findById(chapterId);
@@ -33,7 +37,7 @@ router.put("/:chapterId/page/:pageNumber", async (req, res) => {
       });
     }
 
-    const page = chapter.pages.find((p) => p.pageNumber === Number(pageNumber));
+    const page = chapter.pages.id(pageId);
 
     if (!page) {
       return res.status(404).json({
@@ -58,43 +62,9 @@ router.put("/:chapterId/page/:pageNumber", async (req, res) => {
   }
 });
 
-router.put("/:chapterId/page/:pageNumber/elements", async (req, res) => {
-  try {
-    const { chapterId, pageNumber } = req.params;
-    const { elements } = req.body;
-
-    const chapter = await Chapter.findById(chapterId);
-
-    if (!chapter) {
-      return res.status(404).json({
-        message: "Chapter not found",
-      });
-    }
-
-    const page = chapter.pages.find((p) => p.pageNumber === Number(pageNumber));
-
-    if (!page) {
-      return res.status(404).json({
-        message: "Page not found",
-      });
-    }
-
-    page.elements = elements;
-
-    await chapter.save();
-
-    res.json({
-      message: "Page saved successfully",
-      page,
-    });
-  } catch (err) {
-    console.log(err);
-
-    res.status(500).json({
-      message: "Server Error",
-    });
-  }
-});
+// ============================
+// ADD PAGE
+// ============================
 
 router.put("/:id/add-page", async (req, res) => {
   try {
@@ -107,14 +77,9 @@ router.put("/:id/add-page", async (req, res) => {
     }
 
     chapter.pages.push({
-      id: new mongoose.Types.ObjectId().toString(),
-
-      name: `Page ${chapter.pages.length + 1}`,
-
       pageNumber: chapter.pages.length + 1,
-
-      imageUrl: req.body.imageUrl || "",
-
+      name: `Page ${chapter.pages.length + 1}`,
+      imageUrl: req.body.imageUrl,
       elements: [],
     });
 
@@ -130,6 +95,10 @@ router.put("/:id/add-page", async (req, res) => {
   }
 });
 
+// ============================
+// RENAME PAGE
+// ============================
+
 router.put("/:chapterId/page/:pageId/rename", async (req, res) => {
   try {
     const { chapterId, pageId } = req.params;
@@ -143,7 +112,7 @@ router.put("/:chapterId/page/:pageId/rename", async (req, res) => {
       });
     }
 
-    const page = chapter.pages.find((p) => p.id === pageId);
+    const page = chapter.pages.id(pageId);
 
     if (!page) {
       return res.status(404).json({
@@ -165,6 +134,10 @@ router.put("/:chapterId/page/:pageId/rename", async (req, res) => {
   }
 });
 
+// ============================
+// DELETE PAGE
+// ============================
+
 router.delete("/:chapterId/page/:pageId", async (req, res) => {
   try {
     const { chapterId, pageId } = req.params;
@@ -177,7 +150,15 @@ router.delete("/:chapterId/page/:pageId", async (req, res) => {
       });
     }
 
-    chapter.pages = chapter.pages.filter((p) => p.id !== pageId);
+    const page = chapter.pages.id(pageId);
+
+    if (!page) {
+      return res.status(404).json({
+        message: "Page not found",
+      });
+    }
+
+    page.deleteOne();
 
     chapter.pages.forEach((page, index) => {
       page.pageNumber = index + 1;
@@ -195,6 +176,10 @@ router.delete("/:chapterId/page/:pageId", async (req, res) => {
   }
 });
 
+// ============================
+// DUPLICATE PAGE
+// ============================
+
 router.post("/:chapterId/page/:pageId/duplicate", async (req, res) => {
   try {
     const { chapterId, pageId } = req.params;
@@ -207,7 +192,7 @@ router.post("/:chapterId/page/:pageId/duplicate", async (req, res) => {
       });
     }
 
-    const page = chapter.pages.find((p) => p.id === pageId);
+    const page = chapter.pages.id(pageId);
 
     if (!page) {
       return res.status(404).json({
@@ -215,13 +200,14 @@ router.post("/:chapterId/page/:pageId/duplicate", async (req, res) => {
       });
     }
 
-    const copy = {
-      ...page.toObject(),
-      id: new mongoose.Types.ObjectId().toString(),
-      name: `${page.name} Copy`,
-    };
+    const copy = page.toObject();
 
-    const index = chapter.pages.findIndex((p) => p.id === pageId);
+    delete copy._id;
+
+    copy.pageNumber = page.pageNumber + 1;
+    copy.name = `${page.name || `Page ${page.pageNumber}`} Copy`;
+
+    const index = chapter.pages.findIndex((p) => p._id.toString() === pageId);
 
     chapter.pages.splice(index + 1, 0, copy);
 
@@ -240,6 +226,10 @@ router.post("/:chapterId/page/:pageId/duplicate", async (req, res) => {
     });
   }
 });
+
+// ============================
+// GET CHAPTER DETAILS
+// ============================
 
 router.get("/details/:id", async (req, res) => {
   try {
@@ -261,7 +251,10 @@ router.get("/details/:id", async (req, res) => {
   }
 });
 
+// ============================
 // GET STORY CHAPTERS
+// ============================
+
 router.get("/:storyId", async (req, res) => {
   try {
     const chapters = await Chapter.find({
@@ -279,31 +272,41 @@ router.get("/:storyId", async (req, res) => {
     });
   }
 });
-router.put("/:id", async (req, res) => {
-  console.log("UPDATE ROUTE HIT");
-  console.log(req.params.id);
-  console.log(req.body);
 
+// ============================
+// UPDATE CHAPTER
+// ============================
+
+router.put("/:id", async (req, res) => {
   try {
     const { title, content } = req.body;
 
     const chapter = await Chapter.findByIdAndUpdate(
       req.params.id,
-      { title, content },
-      { new: true },
+      {
+        title,
+        content,
+      },
+      {
+        new: true,
+      },
     );
 
     res.json(chapter);
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Server Error" });
+
+    res.status(500).json({
+      message: "Server Error",
+    });
   }
 });
 
-router.delete("/:id", async (req, res) => {
-  console.log("DELETE ROUTE HIT");
-  console.log(req.params.id);
+// ============================
+// DELETE CHAPTER
+// ============================
 
+router.delete("/:id", async (req, res) => {
   try {
     await Chapter.findByIdAndDelete(req.params.id);
 
@@ -312,7 +315,10 @@ router.delete("/:id", async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Server Error" });
+
+    res.status(500).json({
+      message: "Server Error",
+    });
   }
 });
 

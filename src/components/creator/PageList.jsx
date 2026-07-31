@@ -17,10 +17,10 @@ export default function PageList({ pages, currentPage, onPageSelect, onMenu }) {
     <div className="page-list">
       {pages.map((page, index) => (
         <PageCard
-          key={page.id}
+          key={page._id}
           page={page}
           index={index}
-          active={currentPage?.id === page.id}
+          active={currentPage?.id === page._id}
           onClick={() => onPageSelect(page)}
           onMenu={onMenu}
         />

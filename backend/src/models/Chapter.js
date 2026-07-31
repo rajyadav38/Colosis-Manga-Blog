@@ -26,9 +26,8 @@ const chapterSchema = new mongoose.Schema(
     // For manga/comics
     pages: [
       {
-        // Unique page id
-        id: {
-          type: String,
+        pageNumber: {
+          type: Number,
           required: true,
         },
 
