@@ -97,11 +97,14 @@ export default function CreatorStudio({ theme }) {
   };
 
   const renamePage = async (pageId) => {
-    const page = pages.find((p) => p.id === pageId);
+    const page = pages.find((p) => p._id === pageId);
 
     if (!page) return;
 
-    const newName = window.prompt("Rename Page", page.name);
+    const newName = window.prompt(
+      "Rename Page",
+      page.name || `Page ${page.pageNumber}`,
+    );
 
     if (!newName || newName.trim() === "") return;
 
@@ -124,7 +127,6 @@ export default function CreatorStudio({ theme }) {
       console.log(err);
     }
   };
-
   const duplicatePage = async (pageId) => {
     try {
       await fetch(
@@ -178,7 +180,7 @@ export default function CreatorStudio({ theme }) {
 
     try {
       const res = await fetch(
-        `${API_URL}/api/chapters/${chapterId}/page/${selectedPage.pageNumber}`,
+        `${API_URL}/api/chapters/${chapterId}/page/${selectedPage._id}`,
         {
           method: "PUT",
           headers: {

@@ -20,7 +20,7 @@ export default function PageList({ pages, currentPage, onPageSelect, onMenu }) {
           key={page._id}
           page={page}
           index={index}
-          active={currentPage?.id === page._id}
+          active={currentPage?._id === page._id}
           onClick={() => onPageSelect(page)}
           onMenu={onMenu}
         />
