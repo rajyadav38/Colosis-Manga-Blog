@@ -1,5 +1,6 @@
-import { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import "./pagesSidebar.css";
+
 export default function PageContextMenu({
   visible,
   x,
@@ -9,23 +10,35 @@ export default function PageContextMenu({
   onDelete,
   onMoveUp,
   onMoveDown,
+  onClose,
 }) {
+  const menuRef = useRef(null);
+
   useEffect(() => {
-    const close = () => {};
+    if (!visible) return;
 
-    window.addEventListener("click", close);
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        onClose?.();
+      }
+    };
 
-    return () => window.removeEventListener("click", close);
-  }, []);
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [visible, onClose]);
 
   if (!visible) return null;
 
   return (
     <div
+      ref={menuRef}
       className="page-context-menu"
       style={{
-        left: x,
         top: y,
+        left: x,
       }}
     >
       <button onClick={onRename}>✏ Rename</button>
@@ -37,12 +50,6 @@ export default function PageContextMenu({
       <button className="danger" onClick={onDelete}>
         🗑 Delete
       </button>
-
-      <div className="page-context-divider" />
-
-      <button onClick={onMoveUp}>⬆ Move Up</button>
-
-      <button onClick={onMoveDown}>⬇ Move Down</button>
     </div>
   );
 }

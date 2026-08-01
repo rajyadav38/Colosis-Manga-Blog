@@ -447,6 +447,10 @@ export default function CreatorStudio({ theme }) {
           console.log("Move Down", menuPage);
           setPageMenuVisible(false);
         }}
+        onClose={() => {
+          setPageMenuVisible(false);
+          setMenuPage(null);
+        }}
       />
       <RenamePageModal
         open={renameModalOpen}
