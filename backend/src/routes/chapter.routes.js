@@ -226,6 +226,42 @@ router.post("/:chapterId/page/:pageId/duplicate", async (req, res) => {
     });
   }
 });
+// ============================
+// REORDER PAGES
+// ============================
+
+router.put("/:chapterId/pages/reorder", async (req, res) => {
+  try {
+    const { chapterId } = req.params;
+    const { pages } = req.body;
+
+    const chapter = await Chapter.findById(chapterId);
+
+    if (!chapter) {
+      return res.status(404).json({
+        message: "Chapter not found",
+      });
+    }
+
+    chapter.pages = pages.map((page, index) => ({
+      ...page,
+      pageNumber: index + 1,
+    }));
+
+    await chapter.save();
+
+    res.json({
+      message: "Pages reordered successfully",
+      pages: chapter.pages,
+    });
+  } catch (err) {
+    console.log(err);
+
+    res.status(500).json({
+      message: "Server Error",
+    });
+  }
+});
 
 // ============================
 // GET CHAPTER DETAILS

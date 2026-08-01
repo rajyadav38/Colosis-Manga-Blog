@@ -165,6 +165,54 @@ export default function CreatorStudio({ theme }) {
       console.log(err);
     }
   };
+  const reorderPages = async (activeId, overId) => {
+    const oldIndex = pages.findIndex((p) => p._id === activeId);
+    const newIndex = pages.findIndex((p) => p._id === overId);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const updatedPages = [...pages];
+
+    const [moved] = updatedPages.splice(oldIndex, 1);
+
+    updatedPages.splice(newIndex, 0, moved);
+
+    // Update page numbers locally
+    updatedPages.forEach((page, index) => {
+      page.pageNumber = index + 1;
+    });
+
+    // Instant UI update
+    setPages(updatedPages);
+
+    // Keep selected page selected
+    const selected = updatedPages.find((p) => p._id === selectedPage?._id);
+
+    if (selected) {
+      setSelectedPage(selected);
+    }
+
+    try {
+      await fetch(`${API_URL}/api/chapters/${chapterId}/pages/reorder`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pages: updatedPages,
+        }),
+      });
+
+      setToast({
+        open: true,
+        message: "Page Ordered",
+        type: "success",
+      });
+      await fetchChapter();
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const handleNewPage = () => {
     document.getElementById("upload-page-input")?.click();
@@ -280,6 +328,7 @@ export default function CreatorStudio({ theme }) {
             setCurrentPage={setSelectedPage}
             onNewPage={handleNewPage}
             onPageMenu={handlePageMenu}
+            onReorder={reorderPages}
           />
 
           {/* Hidden Upload */}

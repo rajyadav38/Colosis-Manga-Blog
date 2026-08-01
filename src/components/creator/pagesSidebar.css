@@ -301,3 +301,71 @@
 
   background: rgba(255, 255, 255, 0.08);
 }
+
+.page-card-footer {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 12px;
+}
+
+.page-title {
+  font-size: 14px;
+
+  font-weight: 600;
+
+  overflow: hidden;
+
+  white-space: nowrap;
+
+  text-overflow: ellipsis;
+}
+
+.page-actions {
+  display: flex;
+
+  gap: 6px;
+}
+
+.page-drag-btn,
+.page-menu-btn {
+  width: 34px;
+
+  height: 34px;
+
+  border: none;
+
+  background: transparent;
+
+  color: #b7bfd9;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+}
+
+.page-drag-btn {
+  cursor: grab;
+}
+
+.page-drag-btn:active {
+  cursor: grabbing;
+}
+
+.page-drag-btn:hover,
+.page-menu-btn:hover {
+  background: #353d59;
+
+  color: white;
+}

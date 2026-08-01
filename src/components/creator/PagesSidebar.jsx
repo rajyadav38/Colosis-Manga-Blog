@@ -7,6 +7,7 @@ export default function PagesSidebar({
   setCurrentPage,
   onNewPage,
   onPageMenu,
+  onReorder,
 }) {
   return (
     <div className="pages-sidebar">
@@ -33,6 +34,7 @@ export default function PagesSidebar({
         currentPage={currentPage}
         onPageSelect={setCurrentPage}
         onMenu={onPageMenu}
+        onReorder={onReorder}
       />
 
       {/* Footer */}
