@@ -1,0 +1,49 @@
+.creator-toast {
+  position: fixed;
+
+  right: 30px;
+
+  bottom: 30px;
+
+  min-width: 260px;
+
+  padding: 15px 22px;
+
+  border-radius: 14px;
+
+  color: white;
+
+  font-weight: 600;
+
+  z-index: 100000;
+
+  animation: toastIn 0.25s ease;
+
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+}
+
+.creator-toast.success {
+  background: #198754;
+}
+
+.creator-toast.error {
+  background: #dc3545;
+}
+
+.creator-toast.info {
+  background: #2563eb;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0);
+  }
+}

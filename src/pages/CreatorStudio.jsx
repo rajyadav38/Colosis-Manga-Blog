@@ -6,6 +6,9 @@ import "../styles/CreatorStudio.css";
 import LayersPanel from "../components/creator/LayersPanel";
 import PagesSidebar from "../components/creator/PagesSidebar";
 import PageContextMenu from "../components/creator/PageContextMenu";
+import RenamePageModal from "../components/creator/RenamePageModal";
+import DeletePageModal from "../components/creator/DeletePageModal";
+import Toast from "../components/creator/Toast";
 export default function CreatorStudio({ theme }) {
   const { chapterId } = useParams();
 
@@ -24,6 +27,13 @@ export default function CreatorStudio({ theme }) {
   const [editorSelectedId, setEditorSelectedId] = useState(null);
   const [activeSidebarTab, setActiveSidebarTab] = useState("properties");
   const [pageMenuVisible, setPageMenuVisible] = useState(false);
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    type: "success",
+  });
 
   const [pageMenuPosition, setPageMenuPosition] = useState({
     x: 0,
@@ -96,18 +106,7 @@ export default function CreatorStudio({ theme }) {
     }
   };
 
-  const renamePage = async (pageId) => {
-    const page = pages.find((p) => p._id === pageId);
-
-    if (!page) return;
-
-    const newName = window.prompt(
-      "Rename Page",
-      page.name || `Page ${page.pageNumber}`,
-    );
-
-    if (!newName || newName.trim() === "") return;
-
+  const renamePage = async (pageId, name) => {
     try {
       await fetch(
         `${API_URL}/api/chapters/${chapterId}/page/${pageId}/rename`,
@@ -116,13 +115,16 @@ export default function CreatorStudio({ theme }) {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            name: newName.trim(),
-          }),
+          body: JSON.stringify({ name }),
         },
       );
 
-      fetchChapter();
+      setToast({
+        open: true,
+        message: "✅ Page renamed",
+        type: "success",
+      });
+      await fetchChapter();
     } catch (err) {
       console.log(err);
     }
@@ -136,23 +138,29 @@ export default function CreatorStudio({ theme }) {
         },
       );
 
-      fetchChapter();
+      setToast({
+        open: true,
+        message: "📄 Page duplicated",
+        type: "success",
+      });
+      await fetchChapter();
     } catch (err) {
       console.log(err);
     }
   };
 
   const deletePage = async (pageId) => {
-    const confirmDelete = window.confirm("Delete this page permanently?");
-
-    if (!confirmDelete) return;
-
     try {
       await fetch(`${API_URL}/api/chapters/${chapterId}/page/${pageId}`, {
         method: "DELETE",
       });
 
-      fetchChapter();
+      setToast({
+        open: true,
+        message: "🗑 Page deleted",
+        type: "success",
+      });
+      await fetchChapter();
     } catch (err) {
       console.log(err);
     }
@@ -371,7 +379,7 @@ export default function CreatorStudio({ theme }) {
         x={pageMenuPosition.x}
         y={pageMenuPosition.y}
         onRename={() => {
-          renamePage(menuPage._id);
+          setRenameModalOpen(true);
           setPageMenuVisible(false);
         }}
         onDuplicate={() => {
@@ -379,7 +387,7 @@ export default function CreatorStudio({ theme }) {
           setPageMenuVisible(false);
         }}
         onDelete={() => {
-          deletePage(menuPage._id);
+          setDeleteModalOpen(true);
           setPageMenuVisible(false);
         }}
         onMoveUp={() => {
@@ -390,6 +398,37 @@ export default function CreatorStudio({ theme }) {
           console.log("Move Down", menuPage);
           setPageMenuVisible(false);
         }}
+      />
+      <RenamePageModal
+        open={renameModalOpen}
+        page={menuPage}
+        onClose={() => setRenameModalOpen(false)}
+        onSave={async (name) => {
+          await renamePage(menuPage._id, name);
+
+          setRenameModalOpen(false);
+        }}
+      />
+      <DeletePageModal
+        open={deleteModalOpen}
+        page={menuPage}
+        onClose={() => setDeleteModalOpen(false)}
+        onDelete={async () => {
+          await deletePage(menuPage._id);
+
+          setDeleteModalOpen(false);
+        }}
+      />
+      <Toast
+        open={toast.open}
+        message={toast.message}
+        type={toast.type}
+        onClose={() =>
+          setToast((prev) => ({
+            ...prev,
+            open: false,
+          }))
+        }
       />
     </div>
   );
