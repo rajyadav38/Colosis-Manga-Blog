@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import CanvasEditor from "../components/creator/CanvasEditor";
 import PropertiesPanel from "../components/creator/PropertiesPanel";
@@ -15,7 +15,7 @@ export default function CreatorStudio({ theme }) {
   const API_URL = process.env.REACT_APP_API_URL;
 
   const [chapter, setChapter] = useState(null);
-
+  const pageRenderedRef = useRef(null);
   const [pages, setPages] = useState([]);
 
   const [selectedPage, setSelectedPage] = useState(null);
@@ -41,11 +41,102 @@ export default function CreatorStudio({ theme }) {
   });
 
   const [menuPage, setMenuPage] = useState(null);
+  const [publishing, setPublishing] = useState(false);
+
+  const [publishProgress, setPublishProgress] = useState({
+    current: 0,
+    total: 0,
+  });
 
   useEffect(() => {
     fetchChapter();
     // eslint-disable-next-line
   }, []);
+
+  const waitForPageRender = () => {
+    return new Promise((resolve) => {
+      pageRenderedRef.current = resolve;
+    });
+  };
+
+  const handlePageRendered = () => {
+    if (pageRenderedRef.current) {
+      pageRenderedRef.current();
+      pageRenderedRef.current = null;
+    }
+  };
+  const dataURLToBlob = async (dataURL) => {
+    const response = await fetch(dataURL);
+    return await response.blob();
+  };
+
+  const publishPage = async (page) => {
+    const exportFn = window.creatorStudioExport;
+
+    if (!exportFn) {
+      throw new Error("Canvas export not available");
+    }
+
+    const dataURL = exportFn();
+
+    const blob = await dataURLToBlob(dataURL);
+
+    const formData = new FormData();
+
+    formData.append("image", blob, `page-${page.pageNumber}.png`);
+
+    const res = await fetch(
+      `${API_URL}/api/chapters/${chapterId}/page/${page.pageNumber}/publish`,
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
+
+    if (!res.ok) {
+      throw new Error("Publish failed");
+    }
+
+    return await res.json();
+  };
+  const publishChapter = async () => {
+    if (!pages.length) return;
+
+    try {
+      setPublishing(true);
+
+      for (const page of pages) {
+        setSelectedPage(page);
+
+        await waitForPageRender();
+
+        await publishPage(page);
+
+        setPublishProgress({
+          current: page.pageNumber,
+          total: pages.length,
+        });
+      }
+
+      await fetchChapter();
+
+      setToast({
+        open: true,
+        message: "🚀 Chapter Published",
+        type: "success",
+      });
+    } catch (err) {
+      console.log(err);
+
+      setToast({
+        open: true,
+        message: "Publish Failed",
+        type: "error",
+      });
+    } finally {
+      setPublishing(false);
+    }
+  };
 
   const fetchChapter = async () => {
     try {
@@ -357,6 +448,7 @@ export default function CreatorStudio({ theme }) {
                 setSelectedElement={setSelectedElement}
                 onElementsChange={setEditorElements}
                 onSelectionChange={setEditorSelectedId}
+                onPageRendered={handlePageRendered}
               />
             </div>
           ) : (
@@ -394,11 +486,7 @@ export default function CreatorStudio({ theme }) {
               selectedElement={selectedElement}
               updateSelected={updateSelected}
               deleteSelected={deleteSelected}
-              save={() => {
-                const fn = window.creatorStudioSave;
-
-                if (fn) fn();
-              }}
+              publishChapter={publishChapter}
             />
           ) : (
             <LayersPanel

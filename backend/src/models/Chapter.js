@@ -47,6 +47,16 @@ const chapterSchema = new mongoose.Schema(
           default: "",
         },
 
+        finalImageUrl: {
+          type: String,
+          default: "",
+        },
+
+        publishedAt: {
+          type: Date,
+          default: null,
+        },
+
         elements: [
           {
             id: String,

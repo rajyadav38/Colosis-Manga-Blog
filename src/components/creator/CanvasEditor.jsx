@@ -24,6 +24,7 @@ export default function CanvasEditor({
   setSelectedElement,
   onElementsChange,
   onSelectionChange,
+  onPageRendered,
 }) {
   const stageRef = useRef();
   const transformerRef = useRef();
@@ -79,6 +80,14 @@ export default function CanvasEditor({
     setIsDirty(false);
     setSaveStatus("saved");
   }, [page]);
+
+  useEffect(() => {
+    if (!page) return;
+
+    requestAnimationFrame(() => {
+      onPageRendered?.();
+    });
+  }, [page, elements, onPageRendered]);
 
   useEffect(() => {
     if (!selectedElement) return;
@@ -192,6 +201,18 @@ export default function CanvasEditor({
       window.removeEventListener("keyup", up);
     };
   }, []);
+  useEffect(() => {
+    window.creatorStudioExport = exportStage;
+
+    return () => {
+      delete window.creatorStudioExport;
+    };
+  }, [elements, scale]);
+  const dataURLToBlob = async (dataURL) => {
+    const response = await fetch(dataURL);
+
+    return await response.blob();
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -512,6 +533,30 @@ export default function CanvasEditor({
       return [...prev, copy];
     });
   };
+  const exportStage = () => {
+    if (!stageRef.current) return null;
+
+    const transformer = transformerRef.current;
+
+    // Hide transformer while exporting
+    if (transformer) {
+      transformer.visible(false);
+      transformer.getLayer().batchDraw();
+    }
+
+    const dataURL = stageRef.current.toDataURL({
+      pixelRatio: 3,
+      mimeType: "image/png",
+    });
+
+    // Show transformer again
+    if (transformer) {
+      transformer.visible(true);
+      transformer.getLayer().batchDraw();
+    }
+
+    return dataURL;
+  };
 
   const handleStageClick = (e) => {
     // Don't add new elements when editing text
@@ -721,6 +766,7 @@ export default function CanvasEditor({
   window.creatorStudioMoveLayer = moveLayer;
 
   window.creatorStudioDuplicate = duplicateLayer;
+
   return (
     <div className="canvas-editor-wrapper">
       <div className="editor-toolbar">

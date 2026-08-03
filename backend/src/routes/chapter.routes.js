@@ -1,6 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const Chapter = require("../models/Chapter");
+const multer = require("multer");
+const streamifier = require("streamifier");
+const cloudinary = require("../config/cloudinary");
+const upload = multer({
+  storage: multer.memoryStorage(),
+});
 
 // ============================
 // CREATE CHAPTER
@@ -61,6 +67,73 @@ router.put("/:chapterId/page/:pageId", async (req, res) => {
     });
   }
 });
+
+router.post(
+  "/:chapterId/page/:pageNumber/publish",
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      const { chapterId, pageNumber } = req.params;
+
+      const chapter = await Chapter.findById(chapterId);
+
+      if (!chapter) {
+        return res.status(404).json({
+          message: "Chapter not found",
+        });
+      }
+
+      const page = chapter.pages.find(
+        (p) => p.pageNumber === Number(pageNumber),
+      );
+
+      if (!page) {
+        return res.status(404).json({
+          message: "Page not found",
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({
+          message: "Image required",
+        });
+      }
+
+      const uploaded = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "colosis/published-pages",
+            resource_type: "image",
+            public_id: `chapter-${chapterId}-page-${page.pageNumber}`,
+            overwrite: true,
+          },
+          (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+          },
+        );
+
+        streamifier.createReadStream(req.file.buffer).pipe(stream);
+      });
+
+      page.finalImageUrl = uploaded.secure_url;
+      page.publishedAt = new Date();
+
+      await chapter.save();
+
+      res.json({
+        success: true,
+        imageUrl: uploaded.secure_url,
+      });
+    } catch (err) {
+      console.log(err);
+
+      res.status(500).json({
+        message: "Publish failed",
+      });
+    }
+  },
+);
 
 // ============================
 // ADD PAGE
@@ -243,10 +316,18 @@ router.put("/:chapterId/pages/reorder", async (req, res) => {
       });
     }
 
-    chapter.pages = pages.map((page, index) => ({
-      ...page,
-      pageNumber: index + 1,
-    }));
+    const reorderedPages = [];
+
+    pages.forEach((page, index) => {
+      const existingPage = chapter.pages.id(page._id);
+
+      if (existingPage) {
+        existingPage.pageNumber = index + 1;
+        reorderedPages.push(existingPage);
+      }
+    });
+
+    chapter.pages = reorderedPages;
 
     await chapter.save();
 

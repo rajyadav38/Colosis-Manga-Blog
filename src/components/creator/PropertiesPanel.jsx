@@ -4,7 +4,7 @@ export default function PropertiesPanel({
   selectedElement,
   updateSelected,
   deleteSelected,
-  save,
+  publishChapter,
 }) {
   return (
     <div className="properties-panel">
@@ -27,9 +27,11 @@ export default function PropertiesPanel({
             <p>Select a speech bubble or text layer to edit its properties.</p>
           </div>
 
-          <button className="action-btn save-btn mt-3" onClick={save}>
-            <i className="bi bi-floppy-fill"></i>
-            Save Chapter
+          <button
+            className="btn btn-success w-100 mt-4"
+            onClick={publishChapter}
+          >
+            🚀 Publish Chapter
           </button>
         </>
       )}
@@ -188,9 +190,8 @@ export default function PropertiesPanel({
               Delete Element
             </button>
 
-            <button className="action-btn save-btn" onClick={save}>
-              <i className="bi bi-floppy-fill"></i>
-              Save Chapter
+            <button className="btn btn-success w-100" onClick={publishChapter}>
+              🚀 Publish Chapter
             </button>
           </div>
         </>
