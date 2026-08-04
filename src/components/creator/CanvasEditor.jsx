@@ -7,7 +7,7 @@ import CanvasStage from "./CanvasStage";
 import useHistory from "./hooks/useHistory";
 import LayersPanel from "./LayersPanel";
 function PageImage({ url }) {
-  const [image] = useImage(url);
+  const [image] = useImage(url, "anonymous");
 
   if (!image) return null;
 
@@ -80,14 +80,6 @@ export default function CanvasEditor({
     setIsDirty(false);
     setSaveStatus("saved");
   }, [page]);
-
-  useEffect(() => {
-    if (!page) return;
-
-    requestAnimationFrame(() => {
-      onPageRendered?.();
-    });
-  }, [page, elements, onPageRendered]);
 
   useEffect(() => {
     if (!selectedElement) return;
@@ -887,6 +879,7 @@ export default function CanvasEditor({
           isPanning={isPanning}
           canvasPosition={canvasPosition}
           setCanvasPosition={setCanvasPosition}
+          onPageRendered={onPageRendered}
         />
       </div>
     </div>

@@ -327,10 +327,10 @@ export default function MangaReader() {
 
             {chapter.pages?.map((page, index) => (
               <div key={index} className="mb-4">
-                {page.imageUrl ? (
+                {page.finalImageUrl || page.imageUrl ? (
                   <img
-                    src={page.imageUrl}
-                    alt=""
+                    src={page.finalImageUrl || page.imageUrl}
+                    alt={page.name || `Page ${page.pageNumber}`}
                     style={{
                       width: "100%",
                       maxWidth: "700px",

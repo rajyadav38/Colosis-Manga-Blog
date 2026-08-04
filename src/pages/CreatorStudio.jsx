@@ -109,6 +109,7 @@ export default function CreatorStudio({ theme }) {
         setSelectedPage(page);
 
         await waitForPageRender();
+        await new Promise((resolve) => requestAnimationFrame(resolve));
 
         await publishPage(page);
 
