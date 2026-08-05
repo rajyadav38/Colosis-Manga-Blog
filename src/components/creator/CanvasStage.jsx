@@ -74,15 +74,15 @@ export default function CanvasStage({
           y={canvasPosition.y}
           scaleX={scale}
           scaleY={scale}
-          draggable={isPanning}
-          onDragEnd={(e) => {
-            if (!setCanvasPosition) return;
+          draggable={false}
+          // onDragEnd={(e) => {
+          //   if (!setCanvasPosition) return;
 
-            setCanvasPosition({
-              x: e.target.x(),
-              y: e.target.y(),
-            });
-          }}
+          //   setCanvasPosition({
+          //     x: e.target.x(),
+          //     y: e.target.y(),
+          //   });
+          // }}
         >
           {/* Manga Page */}
           <PageImage url={page.imageUrl} onLoaded={onPageRendered} />

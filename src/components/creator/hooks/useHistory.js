@@ -6,9 +6,15 @@ export default function useHistory(initialState = []) {
   const [future, setFuture] = useState([]);
 
   const set = (newPresent) => {
-    setPast((prev) => [...prev, present]);
-    setPresent(newPresent);
-    setFuture([]);
+    setPresent((current) => {
+      const next =
+        typeof newPresent === "function" ? newPresent(current) : newPresent;
+
+      setPast((prev) => [...prev, current]);
+      setFuture([]);
+
+      return next;
+    });
   };
 
   const undo = () => {

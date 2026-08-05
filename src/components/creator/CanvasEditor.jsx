@@ -61,7 +61,7 @@ export default function CanvasEditor({
 
   const [canvasPosition, setCanvasPosition] = useState(defaultCanvasPosition);
 
-  const [isPanning, setIsPanning] = useState(false);
+  const isPanning = false;
 
   const [previewMode, setPreviewMode] = useState(false);
   useEffect(() => {
@@ -172,27 +172,6 @@ export default function CanvasEditor({
     };
   }, []);
 
-  useEffect(() => {
-    const down = (e) => {
-      if (e.code === "Space") {
-        setIsPanning(true);
-      }
-    };
-
-    const up = (e) => {
-      if (e.code === "Space") {
-        setIsPanning(false);
-      }
-    };
-
-    window.addEventListener("keydown", down);
-    window.addEventListener("keyup", up);
-
-    return () => {
-      window.removeEventListener("keydown", down);
-      window.removeEventListener("keyup", up);
-    };
-  }, []);
   useEffect(() => {
     window.creatorStudioExport = exportStage;
 
@@ -861,7 +840,7 @@ export default function CanvasEditor({
         </div>
       </div>
 
-      <div className={`canvas-paper ${isPanning ? "panning" : ""}`}>
+      <div className="canvas-paper">
         <CanvasStage
           page={page}
           elements={elements}
