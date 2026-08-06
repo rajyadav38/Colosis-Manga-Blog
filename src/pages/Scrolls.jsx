@@ -185,7 +185,6 @@ export default function Scrolls() {
               ref={(el) => (videoRefs.current[index] = el)}
               src={reel.videoUrl}
               autoPlay
-              muted
               loop
               playsInline
               controls={false}
