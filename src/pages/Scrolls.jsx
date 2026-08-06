@@ -7,6 +7,7 @@ export default function Scrolls() {
   const API_URL = process.env.REACT_APP_API_URL;
   const currentUser = JSON.parse(localStorage.getItem("user"));
   const [loading, setLoading] = useState(true);
+  const [muted, setMuted] = useState(true);
   // FETCH REELS
   const fetchReels = async () => {
     try {
@@ -186,6 +187,7 @@ export default function Scrolls() {
               src={reel.videoUrl}
               autoPlay
               loop
+              muted={muted}
               playsInline
               controls={false}
               disablePictureInPicture
@@ -234,6 +236,25 @@ export default function Scrolls() {
               </p>
             </div>
           </div>
+          <button
+            onClick={() => setMuted(!muted)}
+            style={{
+              position: "absolute",
+              top: 20,
+              right: 20,
+              zIndex: 100,
+              borderRadius: "50%",
+              width: 55,
+              height: 55,
+              border: "none",
+              background: "rgba(0,0,0,.5)",
+              color: "white",
+              cursor: "pointer",
+              fontSize: "24px",
+            }}
+          >
+            {muted ? "🔇" : "🔊"}
+          </button>
 
           {/* RIGHT ACTION BUTTONS */}
           <div
