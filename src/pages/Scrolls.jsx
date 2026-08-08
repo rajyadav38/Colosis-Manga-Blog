@@ -1,25 +1,33 @@
 import React, { useEffect, useRef, useState } from "react";
 import ScrollsSkeleton from "../components/skeletons/ScrollsSkeleton";
+import "./scrolls.css";
+
 export default function Scrolls() {
   const [reels, setReels] = useState([]);
   const [commentInputs, setCommentInputs] = useState({});
-  const videoRefs = useRef([]);
-  const API_URL = process.env.REACT_APP_API_URL;
-  const currentUser = JSON.parse(localStorage.getItem("user"));
   const [loading, setLoading] = useState(true);
   const [muted, setMuted] = useState(true);
+  const [activeComments, setActiveComments] = useState(null);
+
+  const videoRefs = useRef([]);
+
+  const API_URL = process.env.REACT_APP_API_URL;
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+
+  // =========================================================
   // FETCH REELS
+  // =========================================================
+
   const fetchReels = async () => {
     try {
       setLoading(true);
 
       const res = await fetch(`${API_URL}/api/reels`);
-
       const data = await res.json();
 
       setReels(data);
     } catch (err) {
-      console.log(err);
+      console.log("Fetch reels error:", err);
     } finally {
       setLoading(false);
     }
@@ -29,8 +37,13 @@ export default function Scrolls() {
     fetchReels();
   }, []);
 
-  // AUTOPLAY CURRENT VIDEO
+  // =========================================================
+  // AUTOPLAY / PAUSE
+  // =========================================================
+
   useEffect(() => {
+    if (!reels.length) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -49,18 +62,27 @@ export default function Scrolls() {
     );
 
     videoRefs.current.forEach((video) => {
-      if (video) observer.observe(video);
+      if (video) {
+        observer.observe(video);
+      }
     });
 
     return () => {
       videoRefs.current.forEach((video) => {
-        if (video) observer.unobserve(video);
+        if (video) {
+          observer.unobserve(video);
+        }
       });
     };
   }, [reels]);
 
-  // LIKE REEL
+  // =========================================================
+  // LIKE
+  // =========================================================
+
   const handleLike = async (reelId) => {
+    if (!currentUser?.id) return;
+
     try {
       const res = await fetch(`${API_URL}/api/reels/like/${reelId}`, {
         method: "PUT",
@@ -82,18 +104,23 @@ export default function Scrolls() {
 
       fetchReels();
     } catch (error) {
-      console.log(error);
+      console.log("Like error:", error);
     }
   };
 
+  // =========================================================
   // COMMENT
+  // =========================================================
+
   const handleComment = async (reelId) => {
+    if (!currentUser?.username) return;
+
     try {
-      const text = commentInputs[reelId];
+      const text = commentInputs[reelId]?.trim();
 
       if (!text) return;
 
-      await fetch(`${API_URL}/api/reels/comment/${reelId}`, {
+      const res = await fetch(`${API_URL}/api/reels/comment/${reelId}`, {
         method: "PUT",
 
         headers: {
@@ -106,315 +133,269 @@ export default function Scrolls() {
         }),
       });
 
-      setCommentInputs({
-        ...commentInputs,
-        [reelId]: "",
-      });
+      if (!res.ok) {
+        throw new Error("Failed to post comment");
+      }
 
-      fetchReels();
+      // Clear input
+      setCommentInputs((prev) => ({
+        ...prev,
+        [reelId]: "",
+      }));
+
+      // Refresh comments
+      await fetchReels();
     } catch (error) {
-      console.log(error);
+      console.log("Comment error:", error);
     }
   };
 
+  // =========================================================
   // SHARE
-  const handleShare = (url) => {
-    navigator.clipboard.writeText(url);
+  // =========================================================
 
-    alert("🔗 Reel link copied!");
+  const handleShare = async (url) => {
+    try {
+      await navigator.clipboard.writeText(url);
+
+      alert("🔗 Reel link copied!");
+    } catch (error) {
+      console.log("Share error:", error);
+    }
   };
+
+  // =========================================================
+  // COMMENTS TOGGLE
+  // =========================================================
+
+  const toggleComments = (reelId) => {
+    setActiveComments((prev) => {
+      if (prev === reelId) {
+        return null;
+      }
+
+      return reelId;
+    });
+  };
+
+  const closeComments = () => {
+    setActiveComments(null);
+  };
+
+  // =========================================================
+  // LOADING
+  // =========================================================
+
   if (loading) {
     return <ScrollsSkeleton />;
   }
 
+  // =========================================================
+  // UI
+  // =========================================================
+
   return (
-    <div
-      style={{
-        background: "linear-gradient(to right, #050816, #0b1026, #050816)",
-        minHeight: "100vh",
-        overflowY: "scroll",
-        scrollSnapType: "y mandatory",
-      }}
-    >
-      {reels.map((reel, index) => (
-        <div
-          key={reel._id}
-          style={{
-            height: "100vh",
-            width: "100%",
-            position: "relative",
-            overflow: "hidden",
-            scrollSnapAlign: "start",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {/* BLURRED BACKGROUND */}
-          <video
-            src={reel.videoUrl}
-            autoPlay
-            muted
-            loop
-            playsInline
-            style={{
-              position: "absolute",
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              filter: "blur(80px)",
-              transform: "scale(1.2)",
-              opacity: 0.25,
-            }}
-          />
+    <main className="scrolls-page">
+      <div className="scrolls-feed">
+        {reels.map((reel, index) => {
+          const commentsOpen = activeComments === reel._id;
 
-          {/* MAIN REEL */}
-          <div
-            style={{
-              width: "420px",
-              height: "88vh",
-              borderRadius: "28px",
-              overflow: "hidden",
-              position: "relative",
-              boxShadow: "0 0 45px rgba(255,0,120,0.45)",
-              zIndex: 2,
-              background: "#000",
-            }}
-          >
-            {/* VIDEO */}
-            <video
-              ref={(el) => (videoRefs.current[index] = el)}
-              src={reel.videoUrl}
-              autoPlay
-              loop
-              muted={muted}
-              playsInline
-              controls={false}
-              disablePictureInPicture
-              controlsList="nodownload nofullscreen noremoteplayback"
-              onContextMenu={(e) => e.preventDefault()}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                WebkitUserSelect: "none",
-                userSelect: "none",
-              }}
-            />
+          return (
+            <section className="scroll-item" key={reel._id}>
+              {/* =================================================
+                  BLURRED BACKGROUND
+              ================================================= */}
 
-            {/* OVERLAY */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                padding: "24px",
-                background: "linear-gradient(transparent, rgba(0,0,0,0.95))",
-                color: "white",
-                zIndex: 5,
-              }}
-            >
-              <h1
-                style={{
-                  fontWeight: "900",
-                  fontSize: "2.2rem",
-                  marginBottom: "10px",
-                }}
-              >
-                @{reel.username}
-              </h1>
-
-              <p
-                style={{
-                  fontSize: "1rem",
-                  color: "#ddd",
-                  marginBottom: 0,
-                }}
-              >
-                {reel.caption}
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={() => setMuted(!muted)}
-            style={{
-              position: "absolute",
-              top: 20,
-              right: 20,
-              zIndex: 100,
-              borderRadius: "50%",
-              width: 55,
-              height: 55,
-              border: "none",
-              background: "rgba(0,0,0,.5)",
-              color: "white",
-              cursor: "pointer",
-              fontSize: "24px",
-            }}
-          >
-            {muted ? "🔇" : "🔊"}
-          </button>
-
-          {/* RIGHT ACTION BUTTONS */}
-          <div
-            style={{
-              position: "absolute",
-              right: "40px",
-              bottom: "120px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "22px",
-              zIndex: 10,
-            }}
-          >
-            {/* LIKE */}
-            <button
-              onClick={() => handleLike(reel._id)}
-              style={{
-                width: "78px",
-                height: "78px",
-                borderRadius: "50%",
-                border: "1px solid rgba(255,255,255,0.2)",
-                background: "rgba(255,255,255,0.08)",
-                backdropFilter: "blur(14px)",
-                color: "white",
-                fontSize: "1.2rem",
-                cursor: "pointer",
-              }}
-            >
-              ❤️
-              <div>{reel.likes || 0}</div>
-            </button>
-
-            {/* COMMENT */}
-            <button
-              style={{
-                width: "78px",
-                height: "78px",
-                borderRadius: "50%",
-                border: "1px solid rgba(255,255,255,0.2)",
-                background: "rgba(255,255,255,0.08)",
-                backdropFilter: "blur(14px)",
-                color: "white",
-                fontSize: "1.2rem",
-              }}
-            >
-              💬
-              <div>{reel.comments?.length || 0}</div>
-            </button>
-
-            {/* SHARE */}
-            <button
-              onClick={() => handleShare(reel.videoUrl)}
-              style={{
-                width: "78px",
-                height: "78px",
-                borderRadius: "50%",
-                border: "1px solid rgba(255,255,255,0.2)",
-                background: "rgba(255,255,255,0.08)",
-                backdropFilter: "blur(14px)",
-                color: "white",
-                fontSize: "1.3rem",
-                cursor: "pointer",
-              }}
-            >
-              🔗
-            </button>
-          </div>
-
-          {/* COMMENT SECTION */}
-          <div
-            style={{
-              position: "absolute",
-              right: "140px",
-              bottom: "40px",
-              width: "340px",
-              zIndex: 10,
-            }}
-          >
-            {/* INPUT */}
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                marginBottom: "14px",
-              }}
-            >
-              <input
-                value={commentInputs[reel._id] || ""}
-                onChange={(e) =>
-                  setCommentInputs({
-                    ...commentInputs,
-                    [reel._id]: e.target.value,
-                  })
-                }
-                placeholder="Write comment..."
-                style={{
-                  flex: 1,
-                  background: "rgba(255,255,255,0.08)",
-                  border: "1px solid rgba(255,255,255,0.15)",
-                  color: "white",
-                  borderRadius: "20px",
-                  padding: "14px",
-                  outline: "none",
-                  backdropFilter: "blur(12px)",
-                }}
+              <video
+                className="scroll-bg-video"
+                src={reel.videoUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
               />
 
-              <button
-                onClick={() => handleComment(reel._id)}
-                style={{
-                  border: "none",
-                  borderRadius: "18px",
-                  background: "#ff3b6b",
-                  color: "white",
-                  padding: "0 22px",
-                  fontWeight: "bold",
-                  cursor: "pointer",
-                }}
-              >
-                Post
-              </button>
-            </div>
+              {/* =================================================
+                  REEL
+              ================================================= */}
 
-            {/* COMMENTS */}
-            <div
-              style={{
-                maxHeight: "220px",
-                overflowY: "auto",
-                display: "flex",
-                flexDirection: "column",
-                gap: "10px",
-              }}
-            >
-              {reel.comments?.map((comment, i) => (
-                <div
-                  key={i}
-                  style={{
-                    background: "rgba(255,255,255,0.08)",
-                    padding: "12px",
-                    borderRadius: "18px",
-                    color: "white",
-                    backdropFilter: "blur(10px)",
+              <div className="scroll-reel">
+                {/* =================================================
+                    VIDEO
+                ================================================= */}
+
+                <video
+                  ref={(el) => {
+                    videoRefs.current[index] = el;
                   }}
-                >
-                  <strong>@{comment.username}</strong>
+                  className="scroll-video"
+                  src={reel.videoUrl}
+                  autoPlay
+                  loop
+                  muted={muted}
+                  playsInline
+                  controls={false}
+                  disablePictureInPicture
+                  controlsList="nodownload nofullscreen noremoteplayback"
+                  onContextMenu={(e) => e.preventDefault()}
+                />
 
-                  <div
-                    style={{
-                      marginTop: "4px",
-                      color: "#ddd",
-                    }}
+                {/* =================================================
+                    TOP BAR
+                ================================================= */}
+
+                <div className="scroll-topbar">
+                  <span className="scrolls-brand">SCROLLS</span>
+
+                  <button
+                    className="scroll-sound-btn"
+                    onClick={() => setMuted((prev) => !prev)}
+                    aria-label={muted ? "Turn sound on" : "Mute"}
                   >
-                    {comment.text}
+                    {muted ? "🔇" : "🔊"}
+                  </button>
+                </div>
+
+                {/* =================================================
+                    VIDEO GRADIENT
+                ================================================= */}
+
+                <div className="scroll-gradient" />
+
+                {/* =================================================
+                    CREATOR INFO
+                ================================================= */}
+
+                <div className="scroll-info">
+                  <button className="scroll-username">@{reel.username}</button>
+
+                  {reel.caption && (
+                    <p className="scroll-caption">{reel.caption}</p>
+                  )}
+                </div>
+
+                {/* =================================================
+                    ACTION BUTTONS
+                ================================================= */}
+
+                <div className="scroll-actions">
+                  {/* LIKE */}
+
+                  <button
+                    className="scroll-action-btn"
+                    onClick={() => handleLike(reel._id)}
+                    aria-label="Like"
+                  >
+                    <span className="scroll-action-icon">❤️</span>
+
+                    <span className="scroll-action-count">
+                      {reel.likes || 0}
+                    </span>
+                  </button>
+
+                  {/* COMMENTS */}
+
+                  <button
+                    className={`scroll-action-btn ${
+                      commentsOpen ? "active" : ""
+                    }`}
+                    onClick={() => toggleComments(reel._id)}
+                    aria-label="Comments"
+                  >
+                    <span className="scroll-action-icon">💬</span>
+
+                    <span className="scroll-action-count">
+                      {reel.comments?.length || 0}
+                    </span>
+                  </button>
+
+                  {/* SHARE */}
+
+                  <button
+                    className="scroll-action-btn"
+                    onClick={() => handleShare(reel.videoUrl)}
+                    aria-label="Share"
+                  >
+                    <span className="scroll-action-icon">🔗</span>
+                  </button>
+                </div>
+
+                {/* =================================================
+                    COMMENTS PANEL
+                ================================================= */}
+
+                <div
+                  className={`scroll-comments ${commentsOpen ? "open" : ""}`}
+                >
+                  {/* HEADER */}
+
+                  <div className="scroll-comments-header">
+                    <strong>Comments</strong>
+
+                    <button
+                      type="button"
+                      onClick={closeComments}
+                      aria-label="Close comments"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {/* COMMENTS LIST */}
+
+                  <div className="scroll-comments-list">
+                    {reel.comments?.length > 0 ? (
+                      reel.comments.map((comment, i) => (
+                        <div className="scroll-comment" key={i}>
+                          <strong>@{comment.username}</strong>
+
+                          <p>{comment.text}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="scroll-no-comments">
+                        No comments yet.
+                        <br />
+                        Be the first to comment.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* =================================================
+                      COMMENT INPUT
+                  ================================================= */}
+
+                  <div className="scroll-comment-input">
+                    <input
+                      type="text"
+                      value={commentInputs[reel._id] || ""}
+                      onChange={(e) =>
+                        setCommentInputs((prev) => ({
+                          ...prev,
+                          [reel._id]: e.target.value,
+                        }))
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          handleComment(reel._id);
+                        }
+                      }}
+                      placeholder="Write a comment..."
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => handleComment(reel._id)}
+                    >
+                      Post
+                    </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </main>
   );
 }
